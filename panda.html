@@ -1,0 +1,1672 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="PANDA — پلتفرم اخبار گیم، انیمه و مانگا با هویت بصری اختصاصی.">
+<title>PANDA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;900&family=Orbitron:wght@600;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#050507; --panel:#0e0f16; --panel2:#14151f;
+    --accent:#1f1f1f; --accent2:#5a5a5a; --gold:#f2f2f2;
+    --text:#f2f2f7; --dim:#9393a8; --line:rgba(255,255,255,0.08);
+  }
+  body.light{
+    --bg:#f3f3f8; --panel:#ffffff; --panel2:#eef0fb;
+    --accent:#111111; --accent2:#4a4a4a; --gold:#1a1a1a;
+    --text:#15151f; --dim:#5c5c72; --line:rgba(20,20,40,0.10);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--bg);color:var(--text);font-family:'Vazirmatn',sans-serif;overflow-x:hidden;transition:background .5s ease,color .5s ease;}
+  ::selection{background:var(--accent);color:#fff;}
+  img{max-width:100%;}
+
+  #scrollProgress{position:fixed;top:0;right:0;height:3px;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--gold));z-index:400;transition:width .1s linear;}
+  #cursorGlow{position:fixed;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle, rgba(180,180,180,0.14), transparent 70%);pointer-events:none;z-index:1;transform:translate(-50%,-50%);transition:opacity .3s ease;display:none;}
+  @media (pointer:fine){ #cursorGlow{display:block;} }
+
+  /* ===== LOADING ===== */
+  #loader{position:fixed;inset:0;z-index:999;background:#050507;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;transition:opacity .7s ease, visibility .7s ease;}
+  #loader.hide{opacity:0;visibility:hidden;pointer-events:none;}
+  #loaderParticles{position:absolute;inset:0;}
+  .loader-panda{width:130px;height:130px;position:relative;z-index:2;animation:loaderSpin 2.2s ease-in-out infinite;}
+  @keyframes loaderSpin{0%,100%{transform:rotateY(0deg);}50%{transform:rotateY(25deg);}}
+  .loader-name{font-family:'Orbitron',sans-serif;font-weight:900;font-size:26px;letter-spacing:6px;z-index:2;
+    background:linear-gradient(100deg,var(--accent),var(--accent2),var(--gold));background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shimmer 2.4s linear infinite;}
+  @keyframes shimmer{0%{background-position:0% 50%;}100%{background-position:200% 50%;}}
+  .loader-bar{width:200px;height:3px;background:rgba(255,255,255,0.1);border-radius:10px;overflow:hidden;z-index:2;}
+  .loader-bar span{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2));animation:loadProg 1.8s ease forwards;}
+  @keyframes loadProg{to{width:100%;}}
+  .sound-toggle{position:absolute;bottom:30px;font-size:12px;color:var(--dim);cursor:pointer;z-index:2;display:flex;align-items:center;gap:6px;}
+
+  #bgfx{position:fixed;inset:0;z-index:0;}
+  .grid-overlay{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(150,150,150,0.06) 1px, transparent 1px),linear-gradient(90deg, rgba(150,150,150,0.06) 1px, transparent 1px);background-size:44px 44px;mask-image:radial-gradient(circle at 50% 20%, black, transparent 75%);}
+  header, main, footer{position:relative;z-index:2;}
+
+  .wave-divider{width:100%;height:60px;overflow:hidden;line-height:0;position:relative;z-index:2;}
+  .wave-divider svg{width:100%;height:100%;}
+
+  /* ===== HEADER ===== */
+  nav{position:fixed;top:0;left:0;right:0;z-index:120;display:flex;align-items:center;justify-content:space-between;padding:14px 5%;backdrop-filter:blur(16px);background:rgba(5,5,7,0.5);border-bottom:1px solid var(--line);transition:padding .3s ease,background .3s ease;}
+  nav.scrolled{padding:9px 5%;background:rgba(5,5,7,0.78);}
+  body.light nav{background:rgba(255,255,255,0.65);}
+  body.light nav.scrolled{background:rgba(255,255,255,0.88);}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-logo{width:36px;height:36px;}
+  .brand-name{font-family:'Orbitron',sans-serif;font-weight:900;font-size:19px;letter-spacing:3px;
+    background:linear-gradient(100deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .nav-icons{display:flex;align-items:center;gap:10px;}
+  .icon-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--panel);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;position:relative;transition:transform .25s ease;}
+  .icon-btn:hover{transform:translateY(-2px) scale(1.06);}
+  .dot-badge{position:absolute;top:6px;left:6px;width:7px;height:7px;border-radius:50%;background:var(--accent2);box-shadow:0 0 8px var(--accent2);animation:pulseDot 1.6s ease-in-out infinite;}
+  @keyframes pulseDot{0%,100%{transform:scale(1);}50%{transform:scale(1.4);}}
+  .dropdown{position:absolute;top:52px;left:0;min-width:230px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px;box-shadow:0 20px 50px -12px rgba(0,0,0,0.5);opacity:0;transform:translateY(-8px);pointer-events:none;transition:opacity .25s ease,transform .25s ease;max-height:340px;overflow-y:auto;}
+  .dropdown.open{opacity:1;transform:translateY(0);pointer-events:auto;}
+  .dropdown a, .dropdown .ddbtn{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:var(--text);text-decoration:none;font-size:13px;cursor:pointer;transition:background .2s ease;background:none;border:none;width:100%;text-align:right;font-family:'Vazirmatn',sans-serif;}
+  .dropdown a:hover, .dropdown .ddbtn:hover{background:var(--panel2);}
+  .dropdown .notif-item{padding:10px 12px;font-size:12.5px;color:var(--dim);border-bottom:1px solid var(--line);}
+  .dropdown .notif-item:last-child{border-bottom:none;}
+  #menuDots{flex-direction:column;gap:3px;}
+  #menuDots span{width:4px;height:4px;border-radius:50%;background:var(--text);}
+
+  /* ===== TICKER ===== */
+  #ticker{position:fixed;top:0;left:0;right:0;z-index:119;margin-top:0;height:0;overflow:hidden;transition:height .3s ease;}
+  #ticker.show{height:30px;margin-top:0;}
+  .ticker-inner{position:absolute;top:64px;white-space:nowrap;display:flex;gap:50px;animation:tickerScroll 30s linear infinite;font-size:12px;color:var(--dim);padding:6px 0;}
+  @keyframes tickerScroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+
+  /* ===== HERO / PANDA ===== */
+  .hero{min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:130px 6% 60px;position:relative;}
+  .hero-eyebrow{font-size:12px;letter-spacing:5px;color:var(--gold);font-weight:700;border:1px solid rgba(200,200,200,0.35);padding:6px 18px;border-radius:100px;margin-bottom:30px;opacity:0;animation:fadeUp .8s ease .1s forwards;}
+  #pandaStage{width:300px;height:300px;perspective:900px;margin-bottom:20px;opacity:0;animation:fadeUp 1s ease .2s forwards;}
+  #pandaWrap{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .15s ease-out;animation:breathe 4s ease-in-out infinite;}
+  @keyframes breathe{0%,100%{transform:scale(1) translateY(0);}50%{transform:scale(1.035) translateY(-4px);}}
+  #pandaWrap svg{width:100%;height:100%;filter:drop-shadow(0 20px 40px rgba(160,160,160,0.35));}
+  .hero h1{font-family:'Orbitron',sans-serif;font-size:clamp(42px,9vw,88px);font-weight:900;letter-spacing:3px;line-height:1;
+    background:linear-gradient(100deg,var(--accent) 10%,var(--accent2) 55%,var(--gold) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+    opacity:0;animation:fadeUp .9s ease .35s forwards;}
+  .hero p{margin-top:18px;max-width:560px;color:var(--dim);font-size:15.5px;line-height:1.9;opacity:0;animation:fadeUp .9s ease .5s forwards;min-height:52px;}
+  #typedCursor{display:inline-block;width:2px;background:var(--accent);animation:blinkCursor .8s step-end infinite;}
+  @keyframes blinkCursor{50%{opacity:0;}}
+  .hero .cta{margin-top:32px;display:flex;gap:14px;flex-wrap:wrap;justify-content:center;opacity:0;animation:fadeUp .9s ease .65s forwards;}
+  .btn{padding:14px 30px;border-radius:100px;font-weight:700;font-size:14px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:transform .25s ease,box-shadow .25s ease;cursor:pointer;border:none;font-family:'Vazirmatn',sans-serif;}
+  .btn-primary{background:linear-gradient(100deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 12px 30px -8px rgba(0,0,0,0.35);}
+  .btn-outline{border:1px solid rgba(200,200,200,0.4);color:var(--gold);background:transparent;}
+  .btn:hover{transform:translateY(-3px);}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(26px);}to{opacity:1;transform:translateY(0);}}
+
+  section{padding:100px 6%;max-width:1180px;margin:0 auto;}
+  .tag{font-size:12px;letter-spacing:3px;color:var(--accent2);font-weight:700;display:block;margin-bottom:12px;}
+  .section-title{font-family:'Orbitron',sans-serif;font-size:clamp(26px,4vw,40px);font-weight:800;margin-bottom:14px;}
+  .section-title span{background:linear-gradient(100deg,var(--accent),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .section-desc{color:var(--dim);max-width:640px;line-height:1.9;margin-bottom:44px;font-size:15px;}
+
+  .reveal{opacity:0;transform:translateY(32px);transition:opacity .8s cubic-bezier(.2,.8,.3,1),transform .8s cubic-bezier(.2,.8,.3,1);}
+  .reveal.in{opacity:1;transform:translateY(0);}
+
+  /* ===== STATS ===== */
+  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;}
+  @media (max-width:800px){.stats-grid{grid-template-columns:repeat(2,1fr);}}
+  .stat-card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px;text-align:center;transition:transform .3s ease;}
+  .stat-card:hover{transform:translateY(-6px);}
+  .stat-num{font-family:'Orbitron',sans-serif;font-size:32px;font-weight:900;background:linear-gradient(100deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .stat-label{color:var(--dim);font-size:12.5px;margin-top:6px;}
+
+  /* ===== FEATURES ===== */
+  .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+  @media (max-width:800px){.features-grid{grid-template-columns:1fr 1fr;}}
+  @media (max-width:520px){.features-grid{grid-template-columns:1fr;}}
+  .feature-card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px;transition:transform .2s ease,box-shadow .2s ease;transform-style:preserve-3d;}
+  .feature-card:hover{box-shadow:0 20px 40px -14px rgba(140,140,140,0.35);}
+  .feature-card .ficon{font-size:28px;margin-bottom:12px;display:block;}
+  .feature-card h5{font-size:15px;margin-bottom:6px;}
+  .feature-card p{color:var(--dim);font-size:12.5px;line-height:1.7;}
+
+  /* ===== AUTH ===== */
+  .auth-wrap{background:linear-gradient(150deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:26px;padding:42px;max-width:480px;margin:0 auto;text-align:center;backdrop-filter:blur(10px);position:relative;overflow:hidden;}
+  .auth-tabs{display:flex;gap:8px;margin-bottom:22px;background:var(--bg);border-radius:100px;padding:5px;}
+  .auth-tab{flex:1;padding:10px;border-radius:100px;border:none;background:none;color:var(--dim);font-weight:700;font-size:13px;cursor:pointer;font-family:'Vazirmatn',sans-serif;transition:all .25s ease;}
+  .auth-tab.active{background:linear-gradient(100deg,var(--accent),var(--accent2));color:#fff;}
+  .auth-wrap input{width:100%;padding:14px 16px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:14px;margin-bottom:12px;font-family:'Vazirmatn',sans-serif;}
+  .auth-msg{font-size:13px;min-height:18px;margin-top:6px;}
+  .auth-msg.err{color:#ff6b6b;}
+  .auth-msg.ok{color:#5fe0a0;}
+  .auth-note{font-size:11.5px;color:var(--dim);margin-top:14px;line-height:1.7;}
+
+  /* ===== NEWS ===== */
+  .news-tabs{display:flex;gap:10px;margin-bottom:26px;flex-wrap:wrap;}
+  .news-tab{padding:10px 22px;border-radius:100px;border:1px solid var(--line);background:var(--panel);color:var(--dim);font-weight:700;font-size:13px;cursor:pointer;transition:all .25s ease;}
+  .news-tab.active{background:linear-gradient(100deg,var(--accent),var(--accent2));color:#fff;border-color:transparent;}
+  .news-controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:26px;}
+  .news-controls input, .news-controls select{padding:11px 16px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--text);font-size:13px;font-family:'Vazirmatn',sans-serif;}
+  .news-controls input{flex:1;min-width:200px;}
+  .news-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;min-height:200px;}
+  @media (max-width:900px){.news-grid{grid-template-columns:repeat(2,1fr);}}
+  @media (max-width:600px){.news-grid{grid-template-columns:1fr;}}
+  .news-card{background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden;transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease;opacity:0;animation:cardIn .5s ease forwards;position:relative;transform-style:preserve-3d;}
+  .news-card:hover{border-color:rgba(140,140,140,0.35);box-shadow:0 24px 50px -18px rgba(140,140,140,0.4);}
+  @keyframes cardIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+  .news-thumb{height:110px;position:relative;overflow:hidden;}
+  .news-thumb.game{background:linear-gradient(135deg,#161616,#3a3a3a);}
+  .news-thumb.anime{background:linear-gradient(135deg,#262626,#4a4a4a);}
+  .news-thumb::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 30% 30%, rgba(255,255,255,0.15), transparent 60%);animation:thumbPulse 4s ease-in-out infinite;}
+  @keyframes thumbPulse{0%,100%{opacity:.6;}50%{opacity:1;}}
+  .news-thumb span{position:absolute;bottom:8px;right:12px;font-size:22px;}
+  .new-badge{position:absolute;top:8px;left:8px;background:var(--accent2);color:#fff;font-size:9.5px;font-weight:800;padding:3px 9px;border-radius:100px;z-index:2;animation:pulseDot 1.6s ease-in-out infinite;}
+  .news-body{padding:16px 18px;}
+  .news-card h5{font-size:14px;margin-bottom:8px;line-height:1.6;}
+  .news-card p{color:var(--dim);font-size:12.5px;line-height:1.7;margin-bottom:10px;}
+  .news-tag-badge{display:inline-block;font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:100px;background:rgba(140,140,140,0.16);color:var(--accent);}
+  .pagination{display:flex;justify-content:center;gap:8px;margin-top:30px;flex-wrap:wrap;}
+  .page-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--text);cursor:pointer;font-size:13px;font-family:'Vazirmatn',sans-serif;}
+  .page-btn.active{background:linear-gradient(100deg,var(--accent),var(--accent2));color:#fff;border-color:transparent;}
+  .empty-state{grid-column:1/-1;text-align:center;color:var(--dim);padding:40px;font-size:13px;}
+  .skeleton{background:linear-gradient(90deg, var(--panel) 25%, var(--panel2) 50%, var(--panel) 75%);background-size:200% 100%;animation:skeletonLoad 1.2s ease-in-out infinite;border-radius:18px;height:230px;}
+  @keyframes skeletonLoad{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+
+  /* ===== TIMELINE ===== */
+  .timeline{position:relative;padding-right:26px;border-right:2px dashed var(--line);}
+  .timeline-item{position:relative;padding-bottom:34px;}
+  .timeline-item::before{content:'';position:absolute;right:-33px;top:2px;width:14px;height:14px;border-radius:50%;background:var(--accent);border:3px solid var(--bg);}
+  .timeline-item.done::before{background:#5fe0a0;}
+  .timeline-item.progress::before{background:var(--gold);}
+  .timeline-phase{font-size:11px;color:var(--accent2);font-weight:700;letter-spacing:1px;}
+  .timeline-item h5{font-size:15px;margin:4px 0 6px;}
+  .timeline-item p{color:var(--dim);font-size:13px;line-height:1.7;}
+  .timeline-status{display:inline-block;font-size:10px;padding:2px 10px;border-radius:100px;margin-top:6px;}
+  .timeline-status.done{background:rgba(95,224,160,0.15);color:#5fe0a0;}
+  .timeline-status.progress{background:rgba(200,200,200,0.18);color:var(--gold);}
+  .timeline-status.planned{background:rgba(147,147,168,0.15);color:var(--dim);}
+
+  /* ===== FAQ ===== */
+  .faq-item{background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-bottom:10px;overflow:hidden;}
+  .faq-q{padding:16px 20px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:700;}
+  .faq-q .arrow{transition:transform .3s ease;color:var(--accent);}
+  .faq-item.open .arrow{transform:rotate(180deg);}
+  .faq-a{max-height:0;overflow:hidden;transition:max-height .35s ease;padding:0 20px;color:var(--dim);font-size:13px;line-height:1.8;}
+  .faq-item.open .faq-a{max-height:300px;padding-bottom:16px;}
+
+  /* ===== TESTIMONIALS MARQUEE ===== */
+  .testi-track{display:flex;gap:20px;animation:testiScroll 26s linear infinite;}
+  .testi-viewport{overflow:hidden;}
+  .testi-viewport:hover .testi-track{animation-play-state:paused;}
+  @keyframes testiScroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+  .testi-card{flex:0 0 300px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;}
+  .testi-card p{color:var(--dim);font-size:13px;line-height:1.8;margin-bottom:12px;}
+  .testi-card b{font-size:12.5px;color:var(--accent);}
+
+  /* ===== EXTERNAL LINKS ===== */
+  .ext-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  @media (max-width:800px){.ext-grid{grid-template-columns:1fr 1fr;}}
+  @media (max-width:520px){.ext-grid{grid-template-columns:1fr;}}
+  .ext-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;text-decoration:none;color:var(--text);display:flex;align-items:center;gap:14px;transition:transform .25s ease,border-color .25s ease;}
+  .ext-card:hover{transform:translateX(-4px);border-color:var(--accent);}
+  .ext-card .eicon{font-size:24px;}
+  .ext-card h6{font-size:13.5px;margin-bottom:3px;}
+  .ext-card small{color:var(--dim);font-size:11px;}
+
+  /* ===== CONTACT ===== */
+  .contact-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+  @media (max-width:800px){.contact-grid{grid-template-columns:1fr;}}
+  .contact-card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:30px 24px;text-align:center;text-decoration:none;color:var(--text);transition:transform .3s ease,box-shadow .3s ease,border-color .3s ease;position:relative;overflow:hidden;}
+  .contact-card:hover{transform:translateY(-8px);border-color:var(--accent);box-shadow:0 20px 40px -12px rgba(140,140,140,0.4);}
+  .contact-card .cicon{font-size:32px;margin-bottom:14px;display:block;}
+  .contact-card h5{font-size:15px;margin-bottom:6px;}
+  .contact-card p{color:var(--dim);font-size:12px;direction:ltr;}
+
+  /* ===== ADMIN ===== */
+  .admin-wrap{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:36px;}
+  .admin-lock{max-width:340px;margin:0 auto;text-align:center;}
+  .admin-lock input{width:100%;padding:14px 16px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:14px;margin:16px 0;font-family:'Vazirmatn',sans-serif;transition:border-color .2s ease;}
+  .admin-lock input.shake{animation:shake .4s ease;border-color:#ff5c5c;}
+  @keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-8px);}40%{transform:translateX(8px);}60%{transform:translateX(-6px);}80%{transform:translateX(6px);}}
+  .admin-lock .err{color:#ff6b6b;font-size:13px;min-height:18px;}
+  .admin-panel{display:none;}
+  .admin-panel.show{display:block;}
+  .admin-lock.hide{display:none;}
+  .admin-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:26px;}
+  .admin-tab-btn{padding:9px 16px;border-radius:100px;border:1px solid var(--line);background:var(--bg);color:var(--dim);font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Vazirmatn',sans-serif;}
+  .admin-tab-btn.active{background:linear-gradient(100deg,var(--accent),var(--accent2));color:#fff;border-color:transparent;}
+  .admin-tab-content{display:none;}
+  .admin-tab-content.active{display:block;}
+  .admin-section h4{font-size:15px;margin-bottom:14px;color:var(--gold);}
+  .admin-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+  .admin-row input, .admin-row select{flex:1;min-width:160px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:13px;font-family:'Vazirmatn',sans-serif;}
+  textarea.admin-textarea{width:100%;min-height:100px;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:13px;line-height:1.7;font-family:'Vazirmatn',sans-serif;resize:vertical;margin-bottom:10px;}
+  .admin-stat{display:inline-flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:12px 20px;margin-bottom:16px;}
+  .admin-stat b{font-family:'Orbitron',sans-serif;font-size:20px;color:var(--accent);}
+  .admin-list-item{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:8px;font-size:12.5px;}
+  .admin-list-item button{background:none;border:none;color:#ff6b6b;cursor:pointer;font-size:14px;}
+  .admin-save-msg{color:#5fe0a0;font-size:13px;margin-top:10px;min-height:16px;}
+  .color-swatch{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);cursor:pointer;padding:0;}
+  .reg-table{width:100%;border-collapse:collapse;font-size:12px;}
+  .reg-table th,.reg-table td{border-bottom:1px solid var(--line);padding:8px;text-align:right;}
+  .reg-table th{color:var(--dim);}
+  .maint-banner{display:none;background:linear-gradient(100deg,var(--gold),var(--accent2));color:#111;text-align:center;padding:10px;font-size:13px;font-weight:700;position:fixed;top:0;left:0;right:0;z-index:500;}
+  .maint-banner.show{display:block;}
+
+  footer{text-align:center;padding:40px 6% 90px;color:var(--dim);font-size:12.5px;border-top:1px solid var(--line);}
+  footer b{color:var(--accent);}
+  #version-tag{font-size:10.5px;opacity:.6;margin-top:6px;}
+  .footer-links{display:flex;justify-content:center;gap:16px;margin-top:14px;flex-wrap:wrap;}
+  .footer-links a{color:var(--dim);text-decoration:none;font-size:12px;}
+  .footer-links a:hover{color:var(--accent);}
+
+  /* ===== SCROLL TO TOP PANDA ===== */
+  #scrollTop{position:fixed;bottom:24px;left:24px;width:56px;height:56px;border-radius:50%;background:var(--panel);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transform:scale(.6) translateY(20px);transition:all .35s ease;z-index:90;box-shadow:0 12px 30px -8px rgba(140,140,140,0.35);}
+  #scrollTop.show{opacity:1;transform:scale(1) translateY(0);}
+  #scrollTop svg{width:28px;height:28px;}
+  #scrollTopRing{position:absolute;inset:-3px;border-radius:50%;}
+
+  /* ===== POPUPS / TOAST ===== */
+  .glass-popup{position:fixed;bottom:26px;right:26px;z-index:300;width:min(330px,88vw);background:rgba(20,18,30,0.55);border:1px solid rgba(255,255,255,0.18);backdrop-filter:blur(22px);border-radius:20px;padding:20px 22px;text-align:right;box-shadow:0 20px 50px -10px rgba(0,0,0,0.5);transform:translateY(140%);transition:transform .5s cubic-bezier(.2,.9,.3,1.1);}
+  .glass-popup.show{transform:translateY(0);}
+  .glass-popup h4{font-size:14px;margin-bottom:6px;}
+  .glass-popup p{color:var(--dim);font-size:12px;margin-bottom:12px;line-height:1.7;}
+  .glass-popup .gp-actions{display:flex;gap:8px;}
+  .glass-popup .gp-close{position:absolute;top:8px;left:12px;background:none;border:none;color:var(--dim);font-size:15px;cursor:pointer;}
+  #popupRegister{left:26px;right:auto;}
+  #toastContainer{position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:500;display:flex;flex-direction:column;gap:8px;align-items:center;}
+  .toast{background:var(--panel);border:1px solid var(--line);border-radius:100px;padding:10px 22px;font-size:12.5px;box-shadow:0 10px 30px -10px rgba(0,0,0,0.5);opacity:0;transform:translateY(-14px);transition:all .35s ease;}
+  .toast.show{opacity:1;transform:translateY(0);}
+
+  #confettiCanvas{position:fixed;inset:0;pointer-events:none;z-index:350;}
+
+  /* ===== BUTTON RIPPLE ===== */
+  .btn{position:relative;overflow:hidden;}
+  .ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,0.5);transform:scale(0);animation:rippleAnim .6s ease-out;pointer-events:none;}
+  @keyframes rippleAnim{to{transform:scale(3);opacity:0;}}
+
+  /* ===== RUNNING PANDA EASTER EGG ===== */
+  #runningPanda{position:fixed;bottom:0;left:-140px;width:90px;height:90px;z-index:95;pointer-events:none;opacity:0;}
+  #runningPanda.run{animation:pandaRun 6s linear forwards;}
+  @keyframes pandaRun{
+    0%{left:-140px;opacity:0;transform:scaleX(1);}
+    5%{opacity:1;}
+    95%{opacity:1;}
+    100%{left:110%;opacity:0;transform:scaleX(1);}
+  }
+  #runningPanda svg{animation:pandaBob .3s ease-in-out infinite alternate;}
+  @keyframes pandaBob{from{transform:translateY(0) rotate(-2deg);}to{transform:translateY(-8px) rotate(2deg);}}
+
+  /* ===== AI ASSISTANT SECTION ===== */
+  .ai-wrap{display:grid;grid-template-columns:280px 1fr;gap:30px;align-items:start;}
+  @media (max-width:800px){.ai-wrap{grid-template-columns:1fr;}}
+  .ai-panda-box{background:linear-gradient(160deg, rgba(180,180,180,0.14), rgba(150,150,150,0.06));border:1px solid var(--line);border-radius:24px;padding:24px;text-align:center;position:sticky;top:90px;backdrop-filter:blur(16px);}
+  #fullPandaSlot{width:180px;height:220px;margin:0 auto;}
+  #fullPandaSlot svg{width:100%;height:100%;}
+  .speech-bubble{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-top:14px;font-size:12.5px;color:var(--text);line-height:1.8;min-height:60px;text-align:right;position:relative;}
+  .speech-bubble::before{content:'';position:absolute;top:-8px;right:30px;border-width:0 8px 8px 8px;border-style:solid;border-color:transparent transparent var(--panel) transparent;}
+  .talking .mouth{animation:mouthTalk .25s ease-in-out infinite alternate;}
+  @keyframes mouthTalk{from{transform:scaleY(1);}to{transform:scaleY(0.35);}}
+  .chat-glass{background:rgba(255,255,255,0.04);border:1px solid var(--line);border-radius:24px;backdrop-filter:blur(20px);padding:22px;display:flex;flex-direction:column;height:460px;}
+  body.light .chat-glass{background:rgba(255,255,255,0.6);}
+  #chatLog{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding-left:4px;margin-bottom:14px;}
+  .chat-msg{max-width:80%;padding:12px 16px;border-radius:16px;font-size:13px;line-height:1.8;animation:msgIn .3s ease;}
+  @keyframes msgIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  .chat-msg.user{align-self:flex-start;background:linear-gradient(100deg,var(--accent),var(--accent2));color:#fff;border-bottom-left-radius:4px;}
+  .chat-msg.bot{align-self:flex-end;background:var(--panel);border:1px solid var(--line);border-bottom-right-radius:4px;}
+  .chat-suggest{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+  .chat-suggest button{background:var(--panel);border:1px solid var(--line);border-radius:100px;padding:7px 14px;font-size:11.5px;color:var(--dim);cursor:pointer;font-family:'Vazirmatn',sans-serif;transition:all .2s ease;}
+  .chat-suggest button:hover{border-color:var(--accent);color:var(--accent);}
+  .chat-input-row{display:flex;gap:10px;}
+  .chat-input-row input{flex:1;padding:13px 16px;border-radius:14px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:13px;font-family:'Vazirmatn',sans-serif;}
+  .typing-dots{display:inline-flex;gap:3px;align-self:flex-end;background:var(--panel);border:1px solid var(--line);padding:12px 16px;border-radius:16px;}
+  .typing-dots span{width:6px;height:6px;border-radius:50%;background:var(--dim);animation:typingBounce 1s ease-in-out infinite;}
+  .typing-dots span:nth-child(2){animation-delay:.15s;}
+  .typing-dots span:nth-child(3){animation-delay:.3s;}
+  @keyframes typingBounce{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-5px);}}
+
+  /* ===== FLOATING ACTION BUTTON (advertises AI assistant) ===== */
+  #pandaFAB{
+    position:fixed; bottom:24px; right:24px; z-index:150;
+    display:flex; align-items:center; gap:10px;
+    background:var(--panel); border:1px solid var(--line); border-radius:100px;
+    padding:10px 18px 10px 10px; cursor:pointer; box-shadow:0 16px 40px -12px rgba(0,0,0,0.5);
+    animation:fabPulse 2.4s ease-in-out infinite;
+    font-family:'Vazirmatn',sans-serif; color:var(--text); font-weight:700; font-size:13px;
+  }
+  #pandaFAB span#fabPandaSlot{width:38px;height:38px;display:block;border-radius:50%;overflow:hidden;background:var(--bg);}
+  #pandaFAB span#fabPandaSlot svg{width:100%;height:100%;}
+  @keyframes fabPulse{0%,100%{box-shadow:0 16px 40px -12px rgba(0,0,0,0.5), 0 0 0 0 rgba(140,140,140,0.5);}50%{box-shadow:0 16px 40px -12px rgba(0,0,0,0.5), 0 0 0 10px rgba(140,140,140,0);}}
+  @media (max-width:600px){ #pandaFAB .fab-label{display:none;} #pandaFAB{padding:8px;} }
+
+  /* ===== FULLSCREEN AI ASSISTANT ===== */
+  #pandaFullscreen{
+    position:fixed; inset:0; z-index:800; background:var(--bg);
+    display:none; flex-direction:column; opacity:0; transition:opacity .4s ease;
+  }
+  #pandaFullscreen.open{ display:flex; opacity:1; }
+  .pfs-header{display:flex;justify-content:space-between;align-items:center;padding:16px 5%;border-bottom:1px solid var(--line);}
+  .pfs-close{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--text);font-size:18px;cursor:pointer;}
+  .pfs-body{flex:1;display:grid;grid-template-columns:340px 1fr;gap:0;overflow:hidden;}
+  @media (max-width:800px){ .pfs-body{grid-template-columns:1fr;grid-template-rows:auto 1fr;} }
+  .pfs-panda-side{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;border-left:1px solid var(--line);background:linear-gradient(180deg, rgba(150,150,150,0.06), transparent);}
+  @media (max-width:800px){ .pfs-panda-side{border-left:none;border-bottom:1px solid var(--line);padding:16px;} }
+  #fullPandaSlotFS{width:220px;height:270px;}
+  #fullPandaSlotFS svg{width:100%;height:100%;filter:drop-shadow(0 20px 40px rgba(0,0,0,0.35));}
+  .pfs-voice-controls{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;justify-content:center;}
+  .voice-btn{width:52px;height:52px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--text);font-size:20px;cursor:pointer;transition:all .2s ease;}
+  .voice-btn.active{background:linear-gradient(100deg,var(--accent),var(--accent2));color:#fff;animation:micPulse 1s ease-in-out infinite;}
+  @keyframes micPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.1);}}
+  .voice-toggle-label{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--dim);margin-top:14px;}
+  .pfs-chat-side{display:flex;flex-direction:column;padding:24px 5%;overflow:hidden;}
+  #chatLogFS{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding:6px;max-width:760px;margin:0 auto;width:100%;}
+  .pfs-input-row{display:flex;gap:10px;max-width:760px;margin:16px auto 0;width:100%;}
+  .pfs-input-row input{flex:1;padding:15px 18px;border-radius:16px;border:1px solid var(--line);background:var(--panel);color:var(--text);font-size:14px;font-family:'Vazirmatn',sans-serif;}
+  .pfs-note{text-align:center;font-size:11px;color:var(--dim);margin-top:10px;}
+</style>
+</head>
+<body>
+
+<div id="loader">
+  <canvas id="loaderParticles"></canvas>
+  <div class="loader-panda" id="loaderPandaSlot"></div>
+  <div class="loader-name">PANDA</div>
+  <div class="loader-bar"><span></span></div>
+  <div class="sound-toggle" id="soundToggle">🔈 فعال‌سازی صدای ظریف</div>
+</div>
+
+<div id="scrollProgress"></div>
+<div id="cursorGlow"></div>
+<div class="maint-banner" id="maintBanner">🛠️ سایت در حال به‌روزرسانی است — برخی امکانات ممکن است موقتاً محدود باشند</div>
+
+<canvas id="bgfx"></canvas>
+<div class="grid-overlay"></div>
+<canvas id="confettiCanvas"></canvas>
+<div id="toastContainer"></div>
+<div id="runningPanda"></div>
+
+<nav id="mainNav">
+  <div class="brand">
+    <div class="brand-logo" id="headerPandaSlot"></div>
+    <div class="brand-name">PANDA</div>
+  </div>
+  <div class="nav-icons">
+    <div style="position:relative;">
+      <div class="icon-btn" id="notifBtn" aria-label="اعلان‌ها">🔔<span class="dot-badge"></span></div>
+      <div class="dropdown" id="notifDropdown"></div>
+    </div>
+    <a href="#contact" class="icon-btn" aria-label="ارتباط با ما">✉️</a>
+    <div style="position:relative;">
+      <div class="icon-btn" id="menuBtn" aria-label="منو">
+        <div id="menuDots" style="display:flex;"><span></span><span></span><span></span></div>
+      </div>
+      <div class="dropdown" id="menuDropdown">
+        <a href="#" onclick="openPandaFullscreen();return false;" style="color:var(--accent);font-weight:800;">🎙️ دستیار هوشمند پاندا</a>
+        <a href="#home">🏠 خانه</a>
+        <a href="#stats">📊 آمار</a>
+        <a href="#features">✨ ویژگی‌ها</a>
+        <a href="#auth">📝 ثبت‌نام / ورود</a>
+        <a href="#game-news">🎮 اخبار گیم</a>
+        <a href="#anime-news">🎌 اخبار انیمه و مانگا</a>
+        <a href="#roadmap">🗺️ نقشه راه</a>
+        <a href="#faq">❓ سوالات متداول</a>
+        <a href="#external">🔗 لینک‌های مفید</a>
+        <a href="#contact">☎️ ارتباط با ما</a>
+        <a href="#admin">🔐 پنل مدیریت</a>
+        <button class="ddbtn" onclick="toggleTheme()">🌓 حالت شب/روز</button>
+        <button class="ddbtn" onclick="toggleTicker()">📰 نوار اخبار متحرک</button>
+        <button class="ddbtn" onclick="logoutUser()">🚪 خروج</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div id="ticker"><div class="ticker-inner" id="tickerInner"></div></div>
+
+<header class="hero" id="home">
+  <div class="hero-eyebrow">GAME × ANIME × MANGA PLATFORM</div>
+  <div id="pandaStage"><div id="pandaWrap"></div></div>
+  <h1 id="heroTitle">PANDA</h1>
+  <p><span id="typedText"></span><span id="typedCursor">&nbsp;</span></p>
+  <div class="cta">
+    <button class="btn btn-primary" onclick="openPandaFullscreen()">🎙️ صحبت با دستیار پاندا</button>
+    <a href="#game-news" class="btn btn-outline">اخبار گیم</a>
+    <a href="#anime-news" class="btn btn-outline">اخبار انیمه</a>
+  </div>
+</header>
+
+<button id="pandaFAB" onclick="openPandaFullscreen()" aria-label="باز کردن دستیار پاندا">
+  <span id="fabPandaSlot"></span>
+  <span class="fab-label">دستیار پاندا</span>
+</button>
+
+<main>
+
+  <section id="stats">
+    <span class="tag reveal">// BY THE NUMBERS</span>
+    <h2 class="section-title reveal">آمار <span>پاندا</span></h2>
+    <p class="section-desc reveal">یک نگاه سریع به حجم محتوای موجود در پلتفرم.</p>
+    <div class="stats-grid" id="statsGrid"></div>
+  </section>
+
+  <section id="features">
+    <span class="tag reveal">// WHY PANDA</span>
+    <h2 class="section-title reveal">چرا <span>PANDA</span>؟</h2>
+    <p class="section-desc reveal">چند دلیل ساده برای اینکه PANDA رو مرجع خودت کنی.</p>
+    <div class="features-grid" id="featuresGrid"></div>
+  </section>
+
+  <section id="auth">
+    <span class="tag reveal">// ACCOUNT</span>
+    <h2 class="section-title reveal">ثبت‌نام <span>/ ورود</span></h2>
+    <p class="section-desc reveal">حساب کاربری در همین مرورگر ذخیره می‌شود (بدون سرور واقعی).</p>
+    <div class="auth-wrap reveal">
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabRegister" onclick="switchAuthTab('register')">ساخت حساب</button>
+        <button class="auth-tab" id="tabLogin" onclick="switchAuthTab('login')">ورود</button>
+      </div>
+      <div id="registerForm">
+        <input type="text" id="regName" placeholder="نام">
+        <input type="text" id="regUsername" placeholder="نام کاربری / آیدی">
+        <input type="text" id="regPhone" placeholder="شماره تماس (اختیاری)">
+        <input type="email" id="regEmail" placeholder="ایمیل (اختیاری)">
+        <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="doRegister()">ساخت حساب</button>
+      </div>
+      <div id="loginForm" style="display:none;">
+        <input type="text" id="loginUsername" placeholder="نام کاربری">
+        <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="doLogin()">ورود</button>
+      </div>
+      <div class="auth-msg" id="authMsg"></div>
+      <div class="auth-note">این بخش صرفاً برای تجربه کاربری طراحی شده و جایگزین یک سیستم احراز هویت واقعی با سرور نیست.</div>
+    </div>
+  </section>
+
+  <section id="game-news">
+    <span class="tag reveal">// GAME NEWS</span>
+    <h2 class="section-title reveal">اخبار <span>گیم</span></h2>
+    <p class="section-desc reveal">آخرین اتفاقات صنعت بازی‌سازی، به‌صورت دسته‌بندی‌شده و قابل جست‌وجو.</p>
+    <div class="news-controls">
+      <input type="text" id="gameSearch" placeholder="جست‌وجو در اخبار گیم...">
+      <select id="gameFilter"><option value="">همه دسته‌ها</option></select>
+    </div>
+    <div class="news-grid" id="gameGrid"></div>
+    <div class="pagination" id="gamePagination"></div>
+  </section>
+
+  <section id="anime-news">
+    <span class="tag reveal">// ANIME & MANGA NEWS</span>
+    <h2 class="section-title reveal">اخبار <span>انیمه و مانگا</span></h2>
+    <p class="section-desc reveal">مهم‌ترین اتفاقات دنیای انیمه و مانگا، قابل فیلتر و جست‌وجو.</p>
+    <div class="news-controls">
+      <input type="text" id="animeSearch" placeholder="جست‌وجو در اخبار انیمه...">
+      <select id="animeFilter"><option value="">همه دسته‌ها</option></select>
+    </div>
+    <div class="news-grid" id="animeGrid"></div>
+    <div class="pagination" id="animePagination"></div>
+  </section>
+
+  <section id="roadmap">
+    <span class="tag reveal">// ROADMAP</span>
+    <h2 class="section-title reveal">نقشه راه <span>توسعه</span></h2>
+    <p class="section-desc reveal">مسیری که PANDA در حال طی کردنشه.</p>
+    <div class="timeline" id="roadmapList"></div>
+  </section>
+
+  <section id="testimonials">
+    <span class="tag reveal">// FEEDBACK</span>
+    <h2 class="section-title reveal">نظرات <span>کاربران</span></h2>
+    <p class="section-desc reveal">چند بازخورد نمونه از تجربه استفاده از PANDA.</p>
+    <div class="testi-viewport"><div class="testi-track" id="testiTrack"></div></div>
+  </section>
+
+  <section id="faq">
+    <span class="tag reveal">// FAQ</span>
+    <h2 class="section-title reveal">سوالات <span>متداول</span></h2>
+    <p class="section-desc reveal">پاسخ شفاف به رایج‌ترین سوالات درباره PANDA.</p>
+    <div id="faqList"></div>
+  </section>
+
+  <section id="external">
+    <span class="tag reveal">// USEFUL LINKS</span>
+    <h2 class="section-title reveal">لینک‌های <span>مفید</span></h2>
+    <p class="section-desc reveal">منابع رسمی معتبر برای عمیق‌تر شدن در دنیای گیم و انیمه.</p>
+    <div class="ext-grid" id="extGrid"></div>
+  </section>
+
+  <section id="ai-assistant">
+    <span class="tag reveal">// AI ASSISTANT</span>
+    <h2 class="section-title reveal">دستیار <span>پاندا</span></h2>
+    <p class="section-desc reveal">هر سوالی درباره سایت و امکاناتش داری بپرس؛ پاندا با دانش کامل درباره PANDA و با صدا جواب می‌ده. <button class="btn btn-outline" style="padding:6px 16px;font-size:12px;margin-right:8px;" onclick="openPandaFullscreen()">باز کردن حالت تمام‌صفحه 🎙️</button></p>
+    <div class="ai-wrap reveal">
+      <div class="ai-panda-box" id="pandaBox">
+        <div id="fullPandaSlot"></div>
+        <div class="speech-bubble" id="speechBubble">سلام! من پاندام 🐼 هر سوالی درباره این سایت داری بپرس.</div>
+      </div>
+      <div class="chat-glass">
+        <div class="chat-suggest">
+          <button onclick="askPanda('این سایت چیه؟')">این سایت چیه؟</button>
+          <button onclick="askPanda('چطور ثبت‌نام کنم؟')">چطور ثبت‌نام کنم؟</button>
+          <button onclick="askPanda('پنل مدیریت چیه؟')">پنل مدیریت چیه؟</button>
+          <button onclick="askPanda('چطور با شما تماس بگیرم؟')">ارتباط با ما</button>
+        </div>
+        <div id="chatLog"></div>
+        <div class="chat-input-row">
+          <input type="text" id="chatInput" placeholder="سوالت رو بنویس..." onkeydown="if(event.key==='Enter') sendChat()">
+          <button class="btn btn-primary" onclick="sendChat()">ارسال</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact">
+    <span class="tag reveal">// CONNECT</span>
+    <h2 class="section-title reveal">ارتباط <span>با ما</span></h2>
+    <p class="section-desc reveal">از طریق هر کدوم از راه‌های زیر در دسترسیم.</p>
+    <div class="contact-grid">
+      <a class="contact-card reveal" href="https://t.me/PV_n0irx" target="_blank" rel="noopener">
+        <span class="cicon">📨</span><h5>تلگرام</h5><p>t.me/PV_n0irx</p>
+      </a>
+      <a class="contact-card reveal" href="https://rubika.ir/B105ick" target="_blank" rel="noopener">
+        <span class="cicon">💬</span><h5>روبیکا</h5><p>rubika.ir/B105ick</p>
+      </a>
+      <a class="contact-card reveal" href="https://harfenashenas.ir/message.php?name=br0hick" target="_blank" rel="noopener">
+        <span class="cicon">💡</span><h5>پیشنهادات</h5><p>ارسال پیام ناشناس</p>
+      </a>
+    </div>
+  </section>
+
+  <section id="admin">
+    <span class="tag reveal">// ADMIN ONLY</span>
+    <h2 class="section-title reveal">پنل <span>مدیریت</span></h2>
+    <p class="section-desc reveal">رمز عبور را وارد کن. توجه: این قفل صرفاً سمت مرورگر است و جایگزین امنیت سروری واقعی نیست.</p>
+    <div class="admin-wrap">
+      <div class="admin-lock" id="adminLock">
+        <p style="color:var(--dim);font-size:13px;">🔒 بخش محافظت‌شده</p>
+        <input type="password" id="adminPass" placeholder="رمز عبور">
+        <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="tryAdminLogin()">ورود</button>
+        <div class="err" id="adminErr"></div>
+      </div>
+      <div class="admin-panel" id="adminPanel">
+        <div class="admin-tabs">
+          <button class="admin-tab-btn active" data-tab="atGeneral" onclick="switchAdminTab('atGeneral')">متن‌ها و رنگ</button>
+          <button class="admin-tab-btn" data-tab="atNews" onclick="switchAdminTab('atNews')">اخبار</button>
+          <button class="admin-tab-btn" data-tab="atLinks" onclick="switchAdminTab('atLinks')">لینک‌ها</button>
+          <button class="admin-tab-btn" data-tab="atNotif" onclick="switchAdminTab('atNotif')">اعلان‌ها</button>
+          <button class="admin-tab-btn" data-tab="atContent" onclick="switchAdminTab('atContent')">آمار / FAQ / نظرات</button>
+          <button class="admin-tab-btn" data-tab="atUsers" onclick="switchAdminTab('atUsers')">کاربران</button>
+          <button class="admin-tab-btn" data-tab="atBackup" onclick="switchAdminTab('atBackup')">پشتیبان‌گیری</button>
+        </div>
+
+        <div class="admin-tab-content active" id="atGeneral">
+          <div class="admin-section">
+            <h4>عنوان و توضیح صفحه اصلی</h4>
+            <input type="text" id="editHeroTitle" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);margin-bottom:8px;">
+            <textarea id="editHeroSub" class="admin-textarea"></textarea>
+          </div>
+          <div class="admin-section">
+            <h4>رنگ اصلی برند</h4>
+            <div class="admin-row" style="align-items:center;">
+              <input type="color" class="color-swatch" id="editAccent1">
+              <input type="color" class="color-swatch" id="editAccent2">
+              <span style="color:var(--dim);font-size:12px;">رنگ اول / رنگ دوم گرادینت</span>
+            </div>
+          </div>
+          <div class="admin-section">
+            <h4>شماره نسخه</h4>
+            <input type="text" id="editVersion" style="width:200px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);">
+          </div>
+          <div class="admin-section">
+            <h4>حالت تعمیر و نگهداری</h4>
+            <button class="btn btn-outline" onclick="toggleMaintenance()" id="maintBtn">فعال‌سازی حالت تعمیر</button>
+          </div>
+          <button class="btn btn-primary" onclick="saveGeneral()">ذخیره تغییرات</button>
+        </div>
+
+        <div class="admin-tab-content" id="atNews">
+          <div class="admin-section">
+            <h4>افزودن خبر جدید</h4>
+            <div class="admin-row">
+              <select id="newNewsCat"><option value="game">اخبار گیم</option><option value="anime">اخبار انیمه/مانگا</option></select>
+              <input type="text" id="newNewsTag" placeholder="دسته (مثلاً معرفی، عرضه بازی)">
+            </div>
+            <input type="text" id="newNewsTitle" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);margin-bottom:8px;" placeholder="عنوان خبر">
+            <textarea id="newNewsDesc" class="admin-textarea" placeholder="توضیح خبر"></textarea>
+            <button class="btn btn-outline" onclick="addNews()">افزودن خبر</button>
+          </div>
+          <div class="admin-section">
+            <h4>حذف خبر</h4>
+            <div id="adminNewsList" style="max-height:260px;overflow-y:auto;"></div>
+          </div>
+        </div>
+
+        <div class="admin-tab-content" id="atLinks">
+          <div class="admin-section">
+            <h4>لینک‌های ارتباطی</h4>
+            <p style="font-size:12px;color:var(--dim);margin-bottom:6px;">تلگرام</p>
+            <input type="text" id="editTelegram" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);margin-bottom:10px;">
+            <p style="font-size:12px;color:var(--dim);margin-bottom:6px;">روبیکا</p>
+            <input type="text" id="editRubika" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);margin-bottom:10px;">
+            <p style="font-size:12px;color:var(--dim);margin-bottom:6px;">فرم پیشنهادات</p>
+            <input type="text" id="editSuggest" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);margin-bottom:10px;">
+            <button class="btn btn-primary" onclick="saveLinks()">ذخیره لینک‌ها</button>
+          </div>
+          <div class="admin-section">
+            <h4>افزودن لینک مفید خارجی</h4>
+            <div class="admin-row">
+              <input type="text" id="newExtIcon" placeholder="ایموجی آیکون" style="max-width:90px;">
+              <input type="text" id="newExtName" placeholder="نام سایت">
+              <input type="text" id="newExtDesc" placeholder="توضیح کوتاه">
+            </div>
+            <input type="text" id="newExtUrl" placeholder="آدرس کامل لینک (https://...)" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);margin-bottom:8px;">
+            <button class="btn btn-outline" onclick="addExtLink()">افزودن لینک</button>
+            <div id="adminExtList" style="margin-top:10px;"></div>
+          </div>
+        </div>
+
+        <div class="admin-tab-content" id="atNotif">
+          <div class="admin-section">
+            <h4>افزودن اعلان</h4>
+            <div class="admin-row">
+              <input type="text" id="newNotifText" placeholder="متن اعلان">
+              <button class="btn btn-outline" onclick="addNotif()">افزودن</button>
+            </div>
+            <div id="adminNotifList"></div>
+          </div>
+          <div class="admin-section">
+            <h4>افزودن پیام نوار متحرک (Ticker)</h4>
+            <div class="admin-row">
+              <input type="text" id="newTickerText" placeholder="متن نوار خبری">
+              <button class="btn btn-outline" onclick="addTicker()">افزودن</button>
+            </div>
+            <div id="adminTickerList"></div>
+          </div>
+        </div>
+
+        <div class="admin-tab-content" id="atContent">
+          <div class="admin-section">
+            <h4>ویرایش آمار (۴ عدد)</h4>
+            <div class="admin-row" id="statsEditRow"></div>
+            <button class="btn btn-outline" onclick="saveStats()">ذخیره آمار</button>
+          </div>
+          <div class="admin-section">
+            <h4>افزودن سوال متداول</h4>
+            <input type="text" id="newFaqQ" placeholder="سوال" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);margin-bottom:8px;">
+            <textarea id="newFaqA" class="admin-textarea" placeholder="پاسخ"></textarea>
+            <button class="btn btn-outline" onclick="addFaq()">افزودن</button>
+            <div id="adminFaqList" style="margin-top:10px;"></div>
+          </div>
+          <div class="admin-section">
+            <h4>افزودن نظر کاربر</h4>
+            <div class="admin-row">
+              <input type="text" id="newTestiName" placeholder="نام">
+              <input type="text" id="newTestiText" placeholder="متن نظر">
+            </div>
+            <button class="btn btn-outline" onclick="addTesti()">افزودن</button>
+            <div id="adminTestiList" style="margin-top:10px;"></div>
+          </div>
+        </div>
+
+        <div class="admin-tab-content" id="atUsers">
+          <div class="admin-section">
+            <h4>کاربران ثبت‌نام‌شده</h4>
+            <div class="admin-stat">تعداد: <b id="userCount">0</b></div>
+            <div style="overflow-x:auto;">
+              <table class="reg-table"><thead><tr><th>نام</th><th>یوزرنیم</th><th>شماره</th><th>ایمیل</th></tr></thead><tbody id="userTableBody"></tbody></table>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-tab-content" id="atBackup">
+          <div class="admin-section">
+            <h4>پشتیبان‌گیری و بازیابی</h4>
+            <p style="color:var(--dim);font-size:12.5px;margin-bottom:14px;">همه تنظیمات سایت (متن، رنگ، اخبار، لینک‌ها، کاربران) را به‌صورت یک فایل JSON دانلود یا بازیابی کن.</p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <button class="btn btn-primary" onclick="exportBackup()">دانلود پشتیبان (JSON)</button>
+              <label class="btn btn-outline" style="cursor:pointer;">
+                بازیابی از فایل
+                <input type="file" id="importFile" accept="application/json" style="display:none;" onchange="importBackup(event)">
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-save-msg" id="adminSaveMsg"></div>
+        <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-outline" onclick="resetPandaSite()">بازگردانی به حالت پیش‌فرض</button>
+          <button class="btn btn-outline" onclick="adminLogout()">خروج از پنل</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <b>PANDA</b> · اخبار گیم، انیمه و مانگا با هویت اختصاصی
+  <div class="footer-links">
+    <a href="#home">خانه</a><a href="#faq">سوالات متداول</a><a href="#external">منابع</a><a href="#contact">ارتباط با ما</a>
+  </div>
+  <div id="version-tag">نسخه P1.0.0</div>
+</footer>
+
+<div id="pandaFullscreen">
+  <div class="pfs-header">
+    <div class="brand-name" style="font-size:16px;">🎙️ دستیار هوشمند PANDA</div>
+    <button class="pfs-close" onclick="closePandaFullscreen()">✕</button>
+  </div>
+  <div class="pfs-body">
+    <div class="pfs-panda-side">
+      <div id="fullPandaSlotFS"></div>
+      <div class="speech-bubble" id="speechBubbleFS" style="max-width:280px;">سلام! من پاندام 🐼 می‌تونی باهام تایپی یا صوتی صحبت کنی.</div>
+      <div class="pfs-voice-controls">
+        <button class="voice-btn" id="micBtn" onclick="toggleMic()" aria-label="صحبت با میکروفون" title="صحبت با صدا">🎤</button>
+        <button class="voice-btn" id="voiceOutBtn" onclick="toggleVoiceOut()" aria-label="روشن/خاموش پاسخ صوتی" title="پاسخ صوتی">🔊</button>
+      </div>
+      <div class="voice-toggle-label" id="micStatus">میکروفون خاموش</div>
+    </div>
+    <div class="pfs-chat-side">
+      <div id="chatLogFS"></div>
+      <div class="pfs-input-row">
+        <input type="text" id="chatInputFS" placeholder="سوالت رو بنویس یا میکروفون رو بزن..." onkeydown="if(event.key==='Enter') sendChat('FS')">
+        <button class="btn btn-primary" onclick="sendChat('FS')">ارسال</button>
+      </div>
+      <div class="pfs-note">این دستیار یک موتور هوشمند مبتنی‌بر دانشِ کامل درباره سایت PANDA است؛ صدا از قابلیت مرورگر شما استفاده می‌کند.</div>
+    </div>
+  </div>
+</div>
+
+<div id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="بازگشت به بالا">
+  <svg id="scrollTopRing" viewBox="0 0 56 56"><circle cx="28" cy="28" r="26" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="163" id="scrollRingCircle" stroke-linecap="round" transform="rotate(-90 28 28)"/></svg>
+  <div id="miniPandaSlot"></div>
+</div>
+
+<div class="glass-popup" id="popupRegister">
+  <button class="gp-close" onclick="closePopup('popupRegister')">✕</button>
+  <h4>🐼 هنوز ثبت‌نام نکردی؟</h4>
+  <p>با ساخت حساب در PANDA، از همه امکانات سایت استفاده کن.</p>
+  <div class="gp-actions">
+    <a href="#auth" class="btn btn-primary" style="font-size:12px;padding:9px 18px;" onclick="closePopup('popupRegister')">ثبت‌نام</a>
+    <button class="btn btn-outline" style="font-size:12px;padding:9px 18px;" onclick="closePopup('popupRegister')">بعداً</button>
+  </div>
+</div>
+
+<div class="glass-popup" id="popupSupport">
+  <button class="gp-close" onclick="closePopup('popupSupport')">✕</button>
+  <h4>💬 سوالی داری؟</h4>
+  <p>تیم پشتیبانی PANDA همیشه از طریق تلگرام و روبیکا در دسترسه.</p>
+  <div class="gp-actions">
+    <a href="#contact" class="btn btn-primary" style="font-size:12px;padding:9px 18px;" onclick="closePopup('popupSupport')">ارتباط با ما</a>
+    <button class="btn btn-outline" style="font-size:12px;padding:9px 18px;" onclick="closePopup('popupSupport')">بعداً</button>
+  </div>
+</div>
+
+<script>
+/* ============ MATURE PANDA LOGO (SVG bust, non-childish) ============ */
+function pandaSVG(idPrefix){
+  return `<svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="${idPrefix}bodyGrad" cx="50%" cy="35%" r="75%">
+        <stop offset="0%" stop-color="#3d3d4a"/><stop offset="100%" stop-color="#0e0e12"/>
+      </radialGradient>
+      <linearGradient id="${idPrefix}rim" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#2b2b2b" stop-opacity="0.9"/>
+        <stop offset="50%" stop-color="#8a8a8a" stop-opacity="0.30"/>
+        <stop offset="100%" stop-color="#f5f5f5" stop-opacity="0.55"/>
+      </linearGradient>
+      <linearGradient id="${idPrefix}bandana" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#3a3a3a"/><stop offset="100%" stop-color="#0a0a0a"/>
+      </linearGradient>
+    </defs>
+    <!-- shoulders / chest for a stronger, adult silhouette -->
+    <path d="M40,175 Q110,145 180,175 L190,220 L30,220 Z" fill="url(#${idPrefix}bodyGrad)"/>
+    <!-- ears -->
+    <circle cx="58" cy="52" r="24" fill="#0e0e12"/>
+    <circle cx="162" cy="52" r="24" fill="#0e0e12"/>
+    <!-- head -->
+    <circle cx="110" cy="105" r="78" fill="#eceef4"/>
+    <!-- eye patches, angular / serious -->
+    <path d="M62,80 Q80,65 100,85 Q95,120 68,128 Q48,118 62,80Z" fill="#0e0e12"/>
+    <path d="M158,80 Q140,65 120,85 Q125,120 152,128 Q172,118 158,80Z" fill="#0e0e12"/>
+    <!-- half-lidded serious eyes -->
+    <path d="M72,100 Q82,92 94,100 L94,106 Q82,100 72,106 Z" fill="#fff"/>
+    <path d="M148,100 Q138,92 126,100 L126,106 Q138,100 148,106 Z" fill="#fff"/>
+    <circle cx="86" cy="101" r="4" fill="#0a0a0d"/>
+    <circle cx="134" cy="101" r="4" fill="#0a0a0d"/>
+    <!-- scar detail for maturity -->
+    <path d="M128,72 L138,96" stroke="#c9cad6" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+    <!-- nose / muzzle -->
+    <ellipse cx="110" cy="140" rx="16" ry="11" fill="#0e0e12"/>
+    <path d="M92,152 Q110,162 128,152" stroke="#0e0e12" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <!-- bandana across forehead -->
+    <path d="M40,72 Q110,50 180,72 L178,86 Q110,66 42,86 Z" fill="url(#${idPrefix}bandana)"/>
+    <path d="M178,80 L200,95 L182,98 Z" fill="url(#${idPrefix}bandana)"/>
+    <!-- rim light overlay -->
+    <ellipse cx="110" cy="105" rx="78" ry="78" fill="url(#${idPrefix}rim)" opacity="0.13"/>
+  </svg>`;
+}
+document.getElementById('loaderPandaSlot').innerHTML = pandaSVG('l');
+document.getElementById('headerPandaSlot').innerHTML = pandaSVG('h');
+document.getElementById('pandaWrap').innerHTML = pandaSVG('m');
+document.getElementById('miniPandaSlot').innerHTML = pandaSVG('s');
+document.getElementById('miniPandaSlot').style.cssText = "width:34px;height:34px;position:relative;z-index:2;";
+
+/* ============ FULL-BODY PANDA (standing, for AI chat + running easter egg) ============ */
+function pandaFullSVG(idPrefix){
+  return `<svg viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="${idPrefix}fBandana" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#3a3a3a"/><stop offset="100%" stop-color="#0a0a0a"/>
+      </linearGradient>
+    </defs>
+    <!-- legs -->
+    <rect x="62" y="205" width="26" height="45" rx="12" fill="#0e0e12"/>
+    <rect x="112" y="205" width="26" height="45" rx="12" fill="#0e0e12"/>
+    <!-- body -->
+    <ellipse cx="100" cy="175" rx="52" ry="55" fill="#eceef4"/>
+    <ellipse cx="100" cy="188" rx="30" ry="34" fill="#0e0e12" opacity="0.9"/>
+    <!-- arms -->
+    <ellipse class="armL" cx="46" cy="165" rx="16" ry="34" fill="#0e0e12" transform="rotate(12 46 165)"/>
+    <ellipse class="armR" cx="154" cy="165" rx="16" ry="34" fill="#0e0e12" transform="rotate(-12 154 165)"/>
+    <!-- ears -->
+    <circle cx="66" cy="55" r="20" fill="#0e0e12"/>
+    <circle cx="134" cy="55" r="20" fill="#0e0e12"/>
+    <!-- head -->
+    <circle cx="100" cy="100" r="62" fill="#eceef4"/>
+    <!-- eye patches -->
+    <path d="M60,80 Q75,68 90,84 Q86,110 64,116 Q48,108 60,80Z" fill="#0e0e12"/>
+    <path d="M140,80 Q125,68 110,84 Q114,110 136,116 Q152,108 140,80Z" fill="#0e0e12"/>
+    <path d="M66,96 Q75,90 84,96 L84,101 Q75,96 66,101Z" fill="#fff"/>
+    <path d="M134,96 Q125,90 116,96 L116,101 Q125,96 134,101Z" fill="#fff"/>
+    <circle cx="77" cy="97" r="3.4" fill="#0a0a0d"/>
+    <circle cx="123" cy="97" r="3.4" fill="#0a0a0d"/>
+    <path d="M116,66 L124,86" stroke="#c9cad6" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+    <!-- nose/mouth (mouth = talking part) -->
+    <ellipse cx="100" cy="128" rx="13" ry="9" fill="#0e0e12"/>
+    <path class="mouth" d="M86,138 Q100,146 114,138" stroke="#0e0e12" stroke-width="3" fill="none" stroke-linecap="round" style="transform-origin:100px 138px;"/>
+    <!-- bandana -->
+    <path d="M38,68 Q100,48 162,68 L160,80 Q100,63 40,80 Z" fill="url(#${idPrefix}fBandana)"/>
+    <path d="M160,74 L180,88 L163,90 Z" fill="url(#${idPrefix}fBandana)"/>
+  </svg>`;
+}
+document.getElementById('fullPandaSlot').innerHTML = pandaFullSVG('f');
+
+/* Running panda easter egg */
+const runningPandaEl = document.getElementById('runningPanda');
+runningPandaEl.innerHTML = pandaFullSVG('r');
+function triggerRunningPanda(){
+  runningPandaEl.classList.remove('run'); void runningPandaEl.offsetWidth;
+  runningPandaEl.classList.add('run');
+}
+setTimeout(triggerRunningPanda, 20000);
+setInterval(triggerRunningPanda, 55000);
+
+/* Mouse parallax tilt on panda */
+const pandaStage = document.getElementById('pandaStage');
+const pandaWrap = document.getElementById('pandaWrap');
+document.addEventListener('mousemove', (e)=>{
+  const rect = pandaStage.getBoundingClientRect();
+  const cx = rect.left + rect.width/2;
+  const cy = rect.top + rect.height/2;
+  const dx = (e.clientX - cx) / rect.width;
+  const dy = (e.clientY - cy) / rect.height;
+  pandaWrap.style.transform = `rotateY(${dx*22}deg) rotateX(${-dy*18}deg)`;
+});
+
+/* Sound toggle */
+let soundOn = false; let audioCtx = null;
+function playTone(freq){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+    o.type = 'sine'; o.frequency.value = freq || 660;
+    g.gain.setValueAtTime(0.05, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + 0.3);
+  }catch(e){}
+}
+document.getElementById('soundToggle').addEventListener('click', function(){
+  soundOn = !soundOn;
+  this.textContent = soundOn ? '🔊 صدا فعال است' : '🔈 فعال‌سازی صدای ظریف';
+  playTone(660);
+});
+document.querySelectorAll('.btn, .icon-btn, .news-tab, .auth-tab').forEach(el=> el.addEventListener('click', ()=>playTone(660)));
+
+/* ============ LOADER PARTICLES ============ */
+(function(){
+  const c = document.getElementById('loaderParticles');
+  const ctx = c.getContext('2d');
+  c.width = window.innerWidth; c.height = window.innerHeight;
+  const pts = Array.from({length:60}, ()=>({x:Math.random()*c.width,y:Math.random()*c.height,vx:(Math.random()-0.5)*0.6,vy:(Math.random()-0.5)*0.6,r:Math.random()*1.5+0.5}));
+  function loop(){
+    ctx.clearRect(0,0,c.width,c.height);
+    pts.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0||p.x>c.width) p.vx*=-1;
+      if(p.y<0||p.y>c.height) p.vy*=-1;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle='rgba(200,200,200,0.75)'; ctx.fill();
+    });
+    if(!document.getElementById('loader').classList.contains('hide')) requestAnimationFrame(loop);
+  }
+  loop();
+})();
+window.addEventListener('load', ()=>{ setTimeout(()=> document.getElementById('loader').classList.add('hide'), 1000); });
+
+/* ============ BACKGROUND PARTICLES ============ */
+const bgc = document.getElementById('bgfx');
+const bgctx = bgc.getContext('2d');
+let BW,BH,bparticles=[];
+function bresize(){ BW=bgc.width=window.innerWidth; BH=bgc.height=window.innerHeight; }
+bresize(); window.addEventListener('resize', bresize);
+const BCOLORS=['#3a3a3a','#8a8a8a','#e8e8e8'];
+for(let i=0;i<80;i++){ bparticles.push({x:Math.random()*BW,y:Math.random()*BH,vx:(Math.random()-0.5)*0.35,vy:(Math.random()-0.5)*0.35,r:Math.random()*1.7+0.5,c:BCOLORS[i%3],a:Math.random()*0.5+0.2}); }
+let bscroll=0;
+const scrollRingCircle = document.getElementById('scrollRingCircle');
+window.addEventListener('scroll', ()=>{
+  const max = document.body.scrollHeight - window.innerHeight;
+  bscroll = max>0 ? Math.min(1, window.scrollY/max) : 0;
+  document.getElementById('scrollProgress').style.width = (bscroll*100)+'%';
+  const st = document.getElementById('scrollTop');
+  if(window.scrollY > 600) st.classList.add('show'); else st.classList.remove('show');
+  scrollRingCircle.style.strokeDashoffset = 163 - (bscroll*163);
+  document.getElementById('mainNav').classList.toggle('scrolled', window.scrollY > 40);
+}, {passive:true});
+scrollRingCircle.style.strokeDashoffset = 163;
+function bloop(){
+  bgctx.clearRect(0,0,BW,BH);
+  const speed = 1+bscroll*3;
+  bparticles.forEach(p=>{
+    p.x+=p.vx*speed; p.y+=p.vy*speed;
+    if(p.x<0||p.x>BW) p.vx*=-1; if(p.y<0||p.y>BH) p.vy*=-1;
+    bgctx.beginPath(); bgctx.arc(p.x,p.y,p.r,0,Math.PI*2); bgctx.fillStyle=p.c; bgctx.globalAlpha=p.a; bgctx.fill();
+  });
+  bgctx.globalAlpha=1;
+  requestAnimationFrame(bloop);
+}
+bloop();
+
+/* ============ CURSOR GLOW ============ */
+const cursorGlow = document.getElementById('cursorGlow');
+document.addEventListener('mousemove', (e)=>{ cursorGlow.style.left = e.clientX+'px'; cursorGlow.style.top = e.clientY+'px'; });
+
+/* ============ CARD 3D TILT ============ */
+function attachTilt(selector){
+  document.querySelectorAll(selector).forEach(card=>{
+    card.addEventListener('mousemove', (e)=>{
+      const r = card.getBoundingClientRect();
+      const x = (e.clientX - r.left)/r.width - 0.5;
+      const y = (e.clientY - r.top)/r.height - 0.5;
+      card.style.transform = `perspective(600px) rotateY(${x*8}deg) rotateX(${-y*8}deg) translateY(-4px)`;
+    });
+    card.addEventListener('mouseleave', ()=>{ card.style.transform = ''; });
+  });
+}
+
+/* ============ HEADER DROPDOWNS ============ */
+function closeAllDropdowns(except){ document.querySelectorAll('.dropdown').forEach(d=>{ if(d.id!==except) d.classList.remove('open'); }); }
+document.getElementById('menuBtn').addEventListener('click', (e)=>{ e.stopPropagation(); closeAllDropdowns('menuDropdown'); document.getElementById('menuDropdown').classList.toggle('open'); });
+document.getElementById('notifBtn').addEventListener('click', (e)=>{ e.stopPropagation(); closeAllDropdowns('notifDropdown'); document.getElementById('notifDropdown').classList.toggle('open'); renderNotifDropdown(); });
+document.addEventListener('click', ()=> closeAllDropdowns());
+
+/* ============ THEME ============ */
+function applyTheme(t){ document.body.classList.toggle('light', t==='light'); }
+function toggleTheme(){
+  const next = document.body.classList.contains('light') ? 'dark' : 'light';
+  applyTheme(next);
+  try{ localStorage.setItem('panda_theme', next); }catch(e){}
+}
+applyTheme((()=>{ try{ return localStorage.getItem('panda_theme')||'dark'; }catch(e){ return 'dark'; } })());
+
+/* ============ TICKER ============ */
+function toggleTicker(){ document.getElementById('ticker').classList.toggle('show'); }
+
+/* ============ TYPING EFFECT ============ */
+const typedTextTarget = "پلتفرم اختصاصی اخبار گیم، انیمه و مانگا — با هویت بصری خاص خودش.";
+let typedIdx = 0;
+function typeLoop(){
+  const el = document.getElementById('typedText');
+  if(typedIdx <= typedTextTarget.length){
+    el.textContent = typedTextTarget.slice(0, typedIdx);
+    typedIdx++;
+    setTimeout(typeLoop, 35);
+  }
+}
+setTimeout(typeLoop, 900);
+
+/* ============ SCROLL REVEAL ============ */
+const io = new IntersectionObserver((entries)=>{ entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('in'); }); },{threshold:0.12});
+document.querySelectorAll('.reveal').forEach(el=> io.observe(el));
+
+/* ============ COUNT-UP STATS ============ */
+function animateCount(el, target){
+  let cur = 0; const step = Math.max(1, Math.ceil(target/60));
+  function tick(){ cur += step; if(cur >= target){ el.textContent = target.toLocaleString('fa-IR'); } else { el.textContent = cur.toLocaleString('fa-IR'); requestAnimationFrame(tick); } }
+  tick();
+}
+const statsObserver = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      document.querySelectorAll('.stat-num').forEach(el=> animateCount(el, parseInt(el.dataset.target,10)));
+      statsObserver.disconnect();
+    }
+  });
+},{threshold:0.4});
+
+/* ============ CONFETTI BURST ============ */
+function confettiBurst(){
+  const c = document.getElementById('confettiCanvas');
+  c.width = window.innerWidth; c.height = window.innerHeight;
+  const ctx = c.getContext('2d');
+  const colors = ['#1a1a1a','#8a8a8a','#eaeaea'];
+  let parts = Array.from({length:80},()=>({
+    x: c.width/2, y: c.height/2, vx:(Math.random()-0.5)*14, vy:(Math.random()-1.4)*14,
+    r: Math.random()*4+2, c: colors[Math.floor(Math.random()*3)], life:60
+  }));
+  function loop(){
+    ctx.clearRect(0,0,c.width,c.height);
+    parts.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.vy+=0.35; p.life--; ctx.globalAlpha=Math.max(0,p.life/60); ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fillStyle=p.c; ctx.fill(); });
+    parts = parts.filter(p=>p.life>0);
+    ctx.globalAlpha=1;
+    if(parts.length) requestAnimationFrame(loop); else ctx.clearRect(0,0,c.width,c.height);
+  }
+  loop();
+}
+
+/* ============ TOAST ============ */
+function showToast(msg){
+  const container = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast'; t.textContent = msg;
+  container.appendChild(t);
+  requestAnimationFrame(()=> t.classList.add('show'));
+  setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=> t.remove(), 400); }, 2600);
+}
+
+/* ============ DATA / STORAGE ============ */
+const DEFAULT_GAME_NEWS = [{"t": "Grand Theft Auto VI رسماً برای ۱۹ نوامبر ۲۰۲۶ تایید شد", "d": "راک‌استار پس از بیش از یک دهه انتظار، تاریخ عرضه GTA 6 روی PS5 و Xbox Series X/S را نهایی کرد.", "tag": "عرضه بازی"}, {"t": "Resident Evil Requiem با بازگشت لئون اس. کندی منتشر شد", "d": "نهمین نسخه اصلی رزیدنت ایول در ۲۷ فوریه ۲۰۲۶ با گیم‌پلی ترکیبی اول و سوم شخص عرضه شد.", "tag": "عرضه بازی"}, {"t": "Fable جدید به دنیای آلبیون بازمی‌گردد", "d": "استودیو Playground Games فرنچایز کلاسیک فانتزی بریتانیایی را با دنیای باز و سیستم پیامد عمیق احیا می‌کند.", "tag": "معرفی"}, {"t": "Marvel's Wolverine برای پاییز ۲۰۲۶ برنامه‌ریزی شد", "d": "Insomniac Games نسخه‌ای تاریک‌تر و خشن‌تر از قهرمانان مارول را می‌سازد.", "tag": "معرفی"}, {"t": "Phantom Blade Zero توجه گسترده‌ای جلب کرده", "d": "ترکیب سبک مبارزات Sekiro و Devil May Cry با هویت بصری الهام‌گرفته از افسانه‌های شرقی.", "tag": "شایعه و انتظار"}, {"t": "Nioh 3 با سبک نینجا منتشر شد", "d": "سومین نسخه Nioh با تمرکز بر فرار، حملات هوایی و محیط‌های بازتر در بهمن ۱۴۰۴ عرضه شد.", "tag": "عرضه بازی"}, {"t": "007 First Light در راه است", "d": "اولین بازی اصلی جیمز باند پس از دهه‌ها، ۲۷ می ۲۰۲۶ منتشر می‌شود.", "tag": "معرفی"}, {"t": "Gears of War: E-Day پیش‌درآمد مجموعه", "d": "داستان آغاز جنگ با لوکاست‌ها و جوانی مارکوس فینیکس را روایت می‌کند.", "tag": "معرفی"}, {"t": "Halo: Campaign Evolved رونمایی شد", "d": "بازسازی کامل کمپین هیلوی اصلی با گرافیک و گیم‌پلی مدرن توسط Halo Studios.", "tag": "معرفی"}, {"t": "Yakuza Kiwami 3 منتشر شد", "d": "بازسازی کامل نسخه سوم یاکوزا با سیستم مبارزات تغییریافته از استودیو RGG.", "tag": "عرضه بازی"}, {"t": "Star Wars: Zero Company معرفی شد", "d": "داستانی بین Attack of the Clones و Revenge of the Sith با تیم Zero Company.", "tag": "معرفی"}, {"t": "Batman: Legacy of the Dark Knight با چند قهرمان قابل‌بازی", "d": "نایت‌وینگ، کت‌وومن، رابین و بت‌گرل هرکدام مهارت‌های اختصاصی دارند.", "tag": "معرفی"}, {"t": "Forza Horizon 6 تنوع ژانر مسابقه‌ای را کامل کرد", "d": "پلی‌گراند گیمز با نسخه جدید فرنچایز محبوب مسابقه‌ای بازگشت.", "tag": "عرضه بازی"}, {"t": "Marvel 1943 ترکیب جنگ جهانی دوم و دنیای مارول", "d": "پروژه‌ای داستان‌محور با کارگردانی یکی از داستان‌نویسان سری Uncharted.", "tag": "معرفی"}, {"t": "Crimson Desert یکی از بزرگ‌ترین جهان‌بازهای ۲۰۲۶", "d": "یکی از پرانتظارترین عناوین جهان‌باز امسال با مقیاس بزرگ.", "tag": "شایعه و انتظار"}, {"t": "Death Stranding 2 و Ghost of Yotei موفق ظاهر شدند", "d": "از موفق‌ترین انحصاری‌های اخیر پلی‌استیشن که استقبال گسترده‌ای گرفتند.", "tag": "نقد و بررسی"}, {"t": "Kingdom Come Deliverance II و Hollow Knight: Silksong پرطرفدار", "d": "دو عنوان شاخص در میان بازی‌های مورد انتظار این دوره.", "tag": "نقد و بررسی"}, {"t": "Diablo IV بسته الحاقی تازه معرفی کرد", "d": "سفر به جزیره اسکاووس در کنار شخصیت لیلیث برای مقابله با مفیستو.", "tag": "بروزرسانی"}, {"t": "Pathologic 3 روایتی خاص از یک شهر طاعون‌زده", "d": "بازی نقش‌آفرینی با محوریت یک پزشک و مدیریت بحران شهری.", "tag": "معرفی"}, {"t": "Code Vein II تمرکز بیشتر روی شخصیت‌ها", "d": "دنباله سولزلایک محبوب با شخصیت‌های همراه در مبارزات.", "tag": "معرفی"}, {"t": "Game Freak یک عنوان AAA جدید معرفی کرد", "d": "استودیوی سازنده پوکمون وارد ژانر جدیدی با نام Beast of Reincarnation می‌شود.", "tag": "معرفی"}, {"t": "۲۰۲۶ عصر طلایی نسل نهم لقب گرفته", "d": "ترکیب جهان‌های باز عظیم و روایت‌های سینمایی، ۲۰۲۶ را متمایز کرده است.", "tag": "تحلیل"}, {"t": "رقابت شدید سونی و مایکروسافت بر سر انحصاری‌ها", "d": "هر دو غول کنسول در حال معرفی بزرگ‌ترین پروژه‌های اختصاصی خود هستند.", "tag": "تحلیل"}, {"t": "موفقیت عناوین مستقل مثل Expedition 33", "d": "نشان داد بازی‌های کوچک‌تر هم می‌توانند در کنار پروژه‌های AAA بدرخشند.", "tag": "نقد و بررسی"}, {"t": "Summer Game Fest 2026 رونمایی‌های بزرگی داشت", "d": "چندین تریلر و تاریخ عرضه جدید در این رویداد معرفی شدند.", "tag": "رویداد"}, {"t": "State of Play پلی‌استیشن تمرکز ویژه‌ای روی انحصاری‌ها داشت", "d": "چندین بازی جدید سونی برای ۲۰۲۶ و ۲۰۲۷ در این رویداد نمایش داده شد.", "tag": "رویداد"}];
+const DEFAULT_ANIME_NEWS = [{"t": "جوجوتسو کایسن وارد آرک کالینگ گیم شد", "d": "فصل سوم، خشن‌ترین و پیچیده‌ترین بخش داستان را با گه‌گه آکوتامی به تصویر می‌کشد.", "tag": "فصل جدید"}, {"t": "فصل دوم Frieren: Beyond Journey's End پخش شد", "d": "از ژانویه ۲۰۲۶ با همان استقبال فصل اول ادامه یافته است.", "tag": "فصل جدید"}, {"t": "آرک Steel Ball Run جوجو در راه اقتباس انیمه‌ای", "d": "یکی از محبوب‌ترین بخش‌های مانگای جوجو پس از سال‌ها انتظار.", "tag": "اقتباس جدید"}, {"t": "فصل پایانی My Hero Academia درحال پخش است", "d": "داستان دکو و هم‌کلاسی‌هایش در دانشگاه یوئی به پایان می‌رسد.", "tag": "فصل پایانی"}, {"t": "Fate/strange Fake یکی از پرانتظارترین آثار فانتزی", "d": "همکاری Type-Moon و Kadokawa در شاخه‌ای تاریک‌تر از دنیای Fate.", "tag": "معرفی"}, {"t": "انیمه سینمایی Paris ni Saku Étoile اکران شد", "d": "روایتی احساسی و شاعرانه با محوریت پاریس اوایل قرن بیستم.", "tag": "اکران سینمایی"}, {"t": "Cosmic Princess Kaguya بازآفرینی مدرن افسانه کلاسیک", "d": "روایت علمی‌تخیلی از افسانه هزارساله پرنسس کاگویا.", "tag": "معرفی"}, {"t": "Black Clover بعد از سال‌ها با فصل جدید بازگشت", "d": "آستا و دوستانش دوباره روی پرده ظاهر می‌شوند.", "tag": "فصل جدید"}, {"t": "Sentenced to Be a Hero اقتباس انیمه‌ای خود را آغاز کرد", "d": "بر اساس مانگای محبوب همنام، در ۲۰۲۶ پخش شد.", "tag": "اقتباس جدید"}, {"t": "وان پیس همچنان پرفروش‌ترین فرنچایز انیمه", "d": "در سال ۲۰۲۶ محبوبیت بی‌رقیب خود را حفظ کرده است.", "tag": "تحلیل"}, {"t": "هزارتو؛ انیمه اورجینال با دنیای موازی در گوشی هوشمند", "d": "یکی از عناوین اورجینال قابل‌توجه سال با ایده‌ای تازه.", "tag": "معرفی"}, {"t": "طلوعی تازه؛ روایت زندگی ژاپن پس از زلزله ۲۰۱۱", "d": "انیمه‌ای احساسی درباره تغییر نگاه مردم بعد از یک فاجعه.", "tag": "معرفی"}, {"t": "My Hero Academia: Vigilantes به‌عنوان پیش‌درآمد معرفی شد", "d": "روایتی از پنج سال قبل از وقایع انیمه اصلی.", "tag": "معرفی"}, {"t": "Attack on Titan و Death Note در صدر لیست بهترین‌های تاریخ", "d": "همچنان در فهرست‌های برتر انیمه ۲۰۲۶ حضور دارند.", "tag": "کلاسیک"}, {"t": "Violet Evergarden و Your Lie in April بازبینی شدند", "d": "دو اثر احساسی برتر در فهرست‌های جدید ۲۰۲۶.", "tag": "کلاسیک"}, {"t": "One Punch Man و Berserk در صدر آثار اکشن/فانتزی", "d": "همچنان محبوبیت بالایی میان طرفداران دارند.", "tag": "کلاسیک"}, {"t": "رقابت Netflix و Crunchyroll برای پخش انحصاری", "d": "هر دو پلتفرم برای جذب آثار بزرگ انیمه رقابت می‌کنند.", "tag": "صنعت"}, {"t": "رشد چشمگیر صنعت انیمه در بازارهای بین‌المللی", "d": "انیمه ژاپنی همچنان در حال گسترش جهانی است.", "tag": "تحلیل"}, {"t": "تنوع ژانری بی‌سابقه در آثار ۲۰۲۶", "d": "ترکیب اکشن، فانتزی و درام سلیقه‌های متنوعی را پوشش می‌دهد.", "tag": "تحلیل"}, {"t": "فناوری‌های جدید انیمیشن کیفیت بصری را ارتقا داده", "d": "استودیوهای بزرگ از ابزارهای جدید برای جزئیات بیشتر استفاده می‌کنند.", "tag": "صنعت"}, {"t": "۲۰۲۶ شلوغ‌ترین سال اخیر برای طرفداران انیمه", "d": "ترکیب دنباله‌های محبوب و آثار اورجینال جدید.", "tag": "تحلیل"}, {"t": "رقابت استودیوها برای اقتباس مانگاهای پرفروش", "d": "رقابت برای گرفتن حق اقتباس مانگاهای محبوب شدت گرفته.", "tag": "صنعت"}, {"t": "The World Is Dancing؛ یکی از آثار برتر تابستان ۲۰۲۶", "d": "جلوه‌های بصری خاص با محوریت هنر رقص ژاپنی.", "tag": "معرفی"}];
+const DEFAULT_NOTIFS = ["🎮 اخبار تازه گیم اضافه شد","🎌 لیست انیمه‌های ۲۰۲۶ به‌روزرسانی شد","🐼 به PANDA خوش اومدی!"];
+const DEFAULT_LINKS = { telegram:"https://t.me/PV_n0irx", rubika:"https://rubika.ir/B105ick", suggest:"https://harfenashenas.ir/message.php?name=br0hick" };
+const DEFAULT_GENERAL = { title:"PANDA", sub: typedTextTarget, accent1:"#1f1f1f", accent2:"#5a5a5a", version:"P1.0.0" };
+const DEFAULT_STATS = [{n:100,l:"خبر منتشرشده"},{n:36,l:"انیمه و بازی معرفی‌شده"},{n:12,l:"لینک منبع معتبر"},{n:24,l:"ساعت پشتیبانی هفتگی"}];
+const DEFAULT_FAQ = [{"q": "آیا حساب کاربری من واقعاً روی سرور ذخیره می‌شود؟", "a": "نه، در نسخه فعلی اطلاعات فقط داخل همین مرورگر ذخیره می‌شود. برای سیستم واقعی نیاز به سرور و پایگاه داده است."}, {"q": "چطور می‌توانم رمز پنل مدیریت را تغییر دهم؟", "a": "در نسخه فعلی رمز داخل کد نوشته شده. برای تغییر واقعی و امن، نیاز به بک‌اند و ذخیره‌سازی رمزنگاری‌شده است."}, {"q": "آیا اخبار به‌صورت خودکار آپدیت می‌شوند؟", "a": "نه، اخبار یک اسنپ‌شات ثابت هستند. از پنل مدیریت می‌توانید خبر جدید اضافه یا حذف کنید."}, {"q": "چرا تغییرات من روی گوشی دیگر دیده نمی‌شود؟", "a": "چون داده‌ها در حافظه محلی (localStorage) همین مرورگر ذخیره می‌شوند، نه روی یک سرور مشترک."}, {"q": "آیا می‌توانم اطلاعات سایت را پشتیبان بگیرم؟", "a": "بله، از تب «پشتیبان‌گیری» در پنل مدیریت می‌توانید یک فایل JSON از همه تنظیمات دانلود یا بازیابی کنید."}];
+const DEFAULT_FEATURES = [{"icon": "🎯", "t": "تمرکز اختصاصی", "d": "محتوای گیم، انیمه و مانگا در یک پلتفرم یکپارچه."}, {"icon": "🎨", "t": "هویت بصری خاص", "d": "طراحی کاملاً اختصاصی PANDA، بدون کپی از قالب‌های رایج."}, {"icon": "⚙️", "t": "پنل مدیریت قدرتمند", "d": "ویرایش متن، رنگ، اخبار و لینک‌ها بدون نیاز به کدنویسی."}, {"icon": "🌓", "t": "تم روز و شب", "d": "جابه‌جایی نرم بین دو حالت، با ذخیره‌سازی ترجیح شما."}, {"icon": "🔍", "t": "جست‌وجو و فیلتر هوشمند", "d": "پیدا کردن سریع خبر موردنظر در میان ده‌ها آیتم."}, {"icon": "📱", "t": "واکنش‌گرا در همه دستگاه‌ها", "d": "تجربه یکسان روی موبایل، تبلت و دسکتاپ."}];
+const DEFAULT_TESTI = [{"n": "عضو تیم باران", "t": "طراحی سایت واقعاً حس یه پلتفرم حرفه‌ای رو میده، نه یه سایت معمولی."}, {"n": "یکی از کاربران گیمر", "t": "بخش اخبار گیم با فیلتر و جست‌وجو خیلی سریع‌تر از قبل به خبر موردنظرم می‌رسم."}, {"n": "طرفدار انیمه", "t": "لیست ۱۰ انیمه برتر و اخبار به‌روز، دقیقاً همون چیزیه که دنبالش بودم."}, {"n": "علاقه‌مند به طراحی", "t": "ماسکوت پاندا و انیمیشن‌های ظریفش حس متفاوتی به کل سایت داده."}];
+const DEFAULT_ROADMAP = [{"phase": "فاز ۱", "t": "راه‌اندازی هسته اصلی", "d": "صفحه اصلی، اخبار گیم و انیمه، پنل مدیریت پایه.", "status": "done"}, {"phase": "فاز ۲", "t": "سیستم حساب کاربری و گیمیفیکیشن", "d": "امتیاز، نشان، و پروفایل عمومی برای اعضا.", "status": "progress"}, {"phase": "فاز ۳", "t": "مانگا و داستان اختصاصی PANDA", "d": "انتشار اولین فصل داستان تصویری تیم.", "status": "planned"}, {"phase": "فاز ۴", "t": "اپلیکیشن موبایل", "d": "نسخه اختصاصی اندروید/iOS با اعلان لحظه‌ای.", "status": "planned"}];
+const DEFAULT_EXT = [{"icon": "🎮", "n": "Steam", "d": "فروشگاه بازی‌های PC", "url": "https://store.steampowered.com"}, {"icon": "📰", "n": "IGN", "d": "اخبار و نقد و بررسی گیم", "url": "https://www.ign.com"}, {"icon": "📺", "n": "Crunchyroll", "d": "پخش رسمی انیمه", "url": "https://www.crunchyroll.com"}, {"icon": "📊", "n": "MyAnimeList", "d": "دیتابیس و رتبه‌بندی انیمه", "url": "https://myanimelist.net"}, {"icon": "🗂️", "n": "AniList", "d": "پیگیری و کشف انیمه/مانگا", "url": "https://anilist.co"}, {"icon": "🕹️", "n": "Epic Games Store", "d": "فروشگاه بازی و بازی‌های رایگان هفتگی", "url": "https://store.epicgames.com"}];
+const DEFAULT_TICKER = ["🐼 به PANDA خوش اومدی", "🎮 GTA VI — ۱۹ نوامبر ۲۰۲۶", "🎌 جوجوتسو کایسن وارد آرک کالینگ گیم شد", "🔥 فصل ۶ کالاف دیوتی موبایل فعال شد", "🤖 رقابت مدل‌های هوش مصنوعی داغ‌تر از همیشه", "📖 مانگای اختصاصی تیم باران به‌زودی"];
+
+function lsGet(key, fallback){ try{ const r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; }catch(e){ return fallback; } }
+function lsSet(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){} }
+
+let gameNews = lsGet('panda_game_news', DEFAULT_GAME_NEWS);
+let animeNews = lsGet('panda_anime_news', DEFAULT_ANIME_NEWS);
+let notifs = lsGet('panda_notifs', DEFAULT_NOTIFS);
+let links = lsGet('panda_links', DEFAULT_LINKS);
+let general = lsGet('panda_general', DEFAULT_GENERAL);
+let users = lsGet('panda_users', []);
+let statsData = lsGet('panda_stats', DEFAULT_STATS);
+let faqData = lsGet('panda_faq', DEFAULT_FAQ);
+let featuresData = lsGet('panda_features', DEFAULT_FEATURES);
+let testiData = lsGet('panda_testi', DEFAULT_TESTI);
+let roadmapData = lsGet('panda_roadmap', DEFAULT_ROADMAP);
+let extData = lsGet('panda_ext', DEFAULT_EXT);
+let tickerData = lsGet('panda_ticker', DEFAULT_TICKER);
+let maintenanceOn = lsGet('panda_maintenance', false);
+
+function applyGeneral(){
+  document.getElementById('heroTitle').textContent = general.title;
+  document.documentElement.style.setProperty('--accent', general.accent1);
+  document.documentElement.style.setProperty('--accent2', general.accent2);
+  document.getElementById('version-tag').textContent = 'نسخه ' + general.version;
+}
+applyGeneral();
+document.getElementById('maintBanner').classList.toggle('show', maintenanceOn);
+
+/* ============ RENDER: STATS ============ */
+function renderStats(){
+  const grid = document.getElementById('statsGrid');
+  grid.innerHTML = statsData.map(s=>`<div class="stat-card"><div class="stat-num" data-target="${s.n}">0</div><div class="stat-label">${s.l}</div></div>`).join('');
+  statsObserver.observe(grid);
+}
+renderStats();
+
+/* ============ RENDER: FEATURES ============ */
+function renderFeatures(){
+  const grid = document.getElementById('featuresGrid');
+  grid.innerHTML = featuresData.map(f=>`<div class="feature-card"><span class="ficon">${f.icon}</span><h5>${f.t}</h5><p>${f.d}</p></div>`).join('');
+  attachTilt('#featuresGrid .feature-card');
+}
+renderFeatures();
+
+/* ============ RENDER: ROADMAP ============ */
+function renderRoadmap(){
+  const wrap = document.getElementById('roadmapList');
+  wrap.innerHTML = roadmapData.map(r=>`
+    <div class="timeline-item ${r.status}">
+      <div class="timeline-phase">${r.phase}</div>
+      <h5>${r.t}</h5><p>${r.d}</p>
+      <span class="timeline-status ${r.status}">${r.status==='done'?'انجام‌شده':r.status==='progress'?'در حال انجام':'برنامه‌ریزی‌شده'}</span>
+    </div>`).join('');
+}
+renderRoadmap();
+
+/* ============ RENDER: TESTIMONIALS ============ */
+function renderTesti(){
+  const track = document.getElementById('testiTrack');
+  const all = [...testiData, ...testiData];
+  track.innerHTML = all.map(t=>`<div class="testi-card"><p>"${t.t}"</p><b>— ${t.n}</b></div>`).join('');
+}
+renderTesti();
+
+/* ============ RENDER: FAQ ============ */
+function renderFaq(){
+  const wrap = document.getElementById('faqList');
+  wrap.innerHTML = '';
+  faqData.forEach(f=>{
+    const div = document.createElement('div'); div.className = 'faq-item';
+    div.innerHTML = `<div class="faq-q"><span>${f.q}</span><span class="arrow">▾</span></div><div class="faq-a">${f.a}</div>`;
+    div.querySelector('.faq-q').addEventListener('click', ()=> div.classList.toggle('open'));
+    wrap.appendChild(div);
+  });
+}
+renderFaq();
+
+/* ============ RENDER: EXTERNAL LINKS ============ */
+function renderExt(){
+  const grid = document.getElementById('extGrid');
+  grid.innerHTML = extData.map(e=>`<a class="ext-card" href="${e.url}" target="_blank" rel="noopener"><span class="eicon">${e.icon}</span><div><h6>${e.n}</h6><small>${e.d}</small></div></a>`).join('');
+  attachTilt('#extGrid .ext-card');
+}
+renderExt();
+
+/* ============ RENDER: TICKER ============ */
+function renderTicker(){
+  document.getElementById('tickerInner').innerHTML = [...tickerData, ...tickerData].map(t=>`<span>${t}</span>`).join('');
+}
+renderTicker();
+
+/* ============ NOTIFICATIONS DROPDOWN ============ */
+function renderNotifDropdown(){
+  const dd = document.getElementById('notifDropdown');
+  dd.innerHTML = notifs.length ? notifs.map(n=>`<div class="notif-item">${n}</div>`).join('') : '<div class="notif-item">اعلانی وجود ندارد</div>';
+}
+
+/* ============ AUTH ============ */
+function switchAuthTab(tab){
+  document.getElementById('tabRegister').classList.toggle('active', tab==='register');
+  document.getElementById('tabLogin').classList.toggle('active', tab==='login');
+  document.getElementById('registerForm').style.display = tab==='register' ? 'block':'none';
+  document.getElementById('loginForm').style.display = tab==='login' ? 'block':'none';
+  document.getElementById('authMsg').textContent = '';
+}
+function doRegister(){
+  const name = document.getElementById('regName').value.trim();
+  const username = document.getElementById('regUsername').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const msg = document.getElementById('authMsg');
+  if(!name || !username){ msg.className='auth-msg err'; msg.textContent='نام و نام کاربری الزامی است'; return; }
+  if(users.find(u=>u.username===username)){ msg.className='auth-msg err'; msg.textContent='این نام کاربری قبلاً ثبت شده'; return; }
+  users.push({name, username, phone, email});
+  lsSet('panda_users', users);
+  try{ localStorage.setItem('panda_current_user', username); }catch(e){}
+  msg.className='auth-msg ok'; msg.textContent='✅ حساب با موفقیت ساخته شد! خوش اومدی ' + name;
+  renderAdminUsers();
+  closePopup('popupRegister');
+  confettiBurst();
+  showToast('🎉 ثبت‌نام با موفقیت انجام شد');
+  ['regName','regUsername','regPhone','regEmail'].forEach(id=> document.getElementById(id).value='');
+}
+function doLogin(){
+  const username = document.getElementById('loginUsername').value.trim();
+  const msg = document.getElementById('authMsg');
+  const u = users.find(x=>x.username===username);
+  if(!u){ msg.className='auth-msg err'; msg.textContent='کاربری با این نام یافت نشد'; return; }
+  try{ localStorage.setItem('panda_current_user', username); }catch(e){}
+  msg.className='auth-msg ok'; msg.textContent='✅ خوش اومدی ' + u.name;
+  showToast('خوش اومدی ' + u.name);
+}
+function logoutUser(){
+  try{ localStorage.removeItem('panda_current_user'); }catch(e){}
+  showToast('از حساب خارج شدی');
+}
+
+/* ============ NEWS RENDER ============ */
+const PAGE_SIZE = 6;
+let gamePage = 1, animePage = 1;
+function populateFilter(selectId, items){
+  const sel = document.getElementById(selectId);
+  const tags = [...new Set(items.map(i=>i.tag))];
+  sel.innerHTML = '<option value="">همه دسته‌ها</option>' + tags.map(t=>`<option value="${t}">${t}</option>`).join('');
+}
+populateFilter('gameFilter', gameNews);
+populateFilter('animeFilter', animeNews);
+function getFiltered(items, searchVal, filterVal){
+  return items.filter(it=>{
+    const matchSearch = !searchVal || (it.t+it.d).toLowerCase().includes(searchVal.toLowerCase());
+    const matchFilter = !filterVal || it.tag === filterVal;
+    return matchSearch && matchFilter;
+  });
+}
+function renderNewsGrid(gridId, pagId, items, page, type){
+  const grid = document.getElementById(gridId);
+  const pag = document.getElementById(pagId);
+  grid.innerHTML = '';
+  if(items.length === 0){
+    grid.innerHTML = '<div class="empty-state">خبری با این مشخصات پیدا نشد.</div>';
+    pag.innerHTML = '';
+    return;
+  }
+  const totalPages = Math.ceil(items.length / PAGE_SIZE);
+  page = Math.min(page, totalPages) || 1;
+  const start = (page-1)*PAGE_SIZE;
+  const slice = items.slice(start, start+PAGE_SIZE);
+  slice.forEach((it, idx)=>{
+    const card = document.createElement('div');
+    card.className = 'news-card';
+    card.style.animationDelay = (idx*0.05)+'s';
+    const isNew = (type==='game'?gameNews:animeNews).indexOf(it) < 3;
+    const iconMap = {'عرضه بازی':'🕹️','معرفی':'🌟','شایعه و انتظار':'🔮','نقد و بررسی':'⭐','بروزرسانی':'🔄','تحلیل':'📈','رویداد':'🎪','فصل جدید':'📺','اقتباس جدید':'🎬','فصل پایانی':'🏁','اکران سینمایی':'🎞️','کلاسیک':'🏆','صنعت':'🏭'};
+    const icon = iconMap[it.tag] || (type==='game'?'🎮':'🎌');
+    card.innerHTML = `${isNew ? '<span class="new-badge">جدید</span>' : ''}<div class="news-thumb ${type}"><span>${icon}</span></div>
+      <div class="news-body"><span class="news-tag-badge">${it.tag}</span><h5 style="margin-top:8px;">${it.t}</h5><p>${it.d}</p></div>`;
+    grid.appendChild(card);
+  });
+  attachTilt('#'+gridId+' .news-card');
+  pag.innerHTML = '';
+  for(let i=1;i<=totalPages;i++){
+    const b = document.createElement('button');
+    b.className = 'page-btn' + (i===page?' active':'');
+    b.textContent = i;
+    b.addEventListener('click', ()=>{ if(type==='game'){ gamePage=i; refreshGame(); } else { animePage=i; refreshAnime(); } window.scrollTo({top:document.getElementById(type==='game'?'game-news':'anime-news').offsetTop-70, behavior:'smooth'}); });
+    pag.appendChild(b);
+  }
+}
+function refreshGame(){ renderNewsGrid('gameGrid','gamePagination', getFiltered(gameNews, document.getElementById('gameSearch').value, document.getElementById('gameFilter').value), gamePage, 'game'); }
+function refreshAnime(){ renderNewsGrid('animeGrid','animePagination', getFiltered(animeNews, document.getElementById('animeSearch').value, document.getElementById('animeFilter').value), animePage, 'anime'); }
+document.getElementById('gameSearch').addEventListener('input', ()=>{ gamePage=1; refreshGame(); });
+document.getElementById('gameFilter').addEventListener('change', ()=>{ gamePage=1; refreshGame(); });
+document.getElementById('animeSearch').addEventListener('input', ()=>{ animePage=1; refreshAnime(); });
+document.getElementById('animeFilter').addEventListener('change', ()=>{ animePage=1; refreshAnime(); });
+refreshGame(); refreshAnime();
+
+/* ============ POPUPS ============ */
+function closePopup(id){ document.getElementById(id).classList.remove('show'); }
+function showPopup(id){ document.getElementById(id).classList.add('show'); }
+setTimeout(()=> showPopup('popupRegister'), 16000);
+setInterval(()=> showPopup('popupRegister'), 130000);
+setTimeout(()=> showPopup('popupSupport'), 55000);
+setInterval(()=> showPopup('popupSupport'), 170000);
+
+/* ============ ADMIN ============ */
+const ADMIN_PASS = "2580";
+function tryAdminLogin(){
+  const input = document.getElementById('adminPass');
+  if(input.value === ADMIN_PASS){
+    document.getElementById('adminLock').classList.add('hide');
+    document.getElementById('adminPanel').classList.add('show');
+    document.getElementById('editHeroTitle').value = general.title;
+    document.getElementById('editHeroSub').value = general.sub;
+    document.getElementById('editAccent1').value = general.accent1;
+    document.getElementById('editAccent2').value = general.accent2;
+    document.getElementById('editVersion').value = general.version;
+    document.getElementById('editTelegram').value = links.telegram;
+    document.getElementById('editRubika').value = links.rubika;
+    document.getElementById('editSuggest').value = links.suggest;
+    document.getElementById('maintBtn').textContent = maintenanceOn ? 'غیرفعال‌سازی حالت تعمیر' : 'فعال‌سازی حالت تعمیر';
+    renderAdminNewsList(); renderAdminNotifList(); renderAdminUsers(); renderAdminExtList(); renderStatsEditRow(); renderAdminFaqList(); renderAdminTestiList(); renderAdminTickerList();
+    showToast('ورود موفق به پنل مدیریت');
+  }else{
+    document.getElementById('adminErr').textContent = 'رمز عبور اشتباه است';
+    input.classList.remove('shake'); void input.offsetWidth; input.classList.add('shake');
+    playTone(180);
+  }
+}
+function adminLogout(){
+  document.getElementById('adminLock').classList.remove('hide');
+  document.getElementById('adminPanel').classList.remove('show');
+  document.getElementById('adminPass').value = '';
+  document.getElementById('adminErr').textContent = '';
+}
+function switchAdminTab(tabId){
+  document.querySelectorAll('.admin-tab-btn').forEach(b=> b.classList.toggle('active', b.dataset.tab===tabId));
+  document.querySelectorAll('.admin-tab-content').forEach(c=> c.classList.toggle('active', c.id===tabId));
+}
+function flashAdmin(msg){ const el=document.getElementById('adminSaveMsg'); el.textContent=msg; showToast(msg); setTimeout(()=> el.textContent = '', 2200); }
+
+function toggleMaintenance(){
+  maintenanceOn = !maintenanceOn;
+  lsSet('panda_maintenance', maintenanceOn);
+  document.getElementById('maintBanner').classList.toggle('show', maintenanceOn);
+  document.getElementById('maintBtn').textContent = maintenanceOn ? 'غیرفعال‌سازی حالت تعمیر' : 'فعال‌سازی حالت تعمیر';
+}
+function saveGeneral(){
+  general.title = document.getElementById('editHeroTitle').value || DEFAULT_GENERAL.title;
+  general.sub = document.getElementById('editHeroSub').value || DEFAULT_GENERAL.sub;
+  general.accent1 = document.getElementById('editAccent1').value;
+  general.accent2 = document.getElementById('editAccent2').value;
+  general.version = document.getElementById('editVersion').value || DEFAULT_GENERAL.version;
+  lsSet('panda_general', general);
+  applyGeneral();
+  flashAdmin('ذخیره شد ✔');
+}
+function saveLinks(){
+  links.telegram = document.getElementById('editTelegram').value;
+  links.rubika = document.getElementById('editRubika').value;
+  links.suggest = document.getElementById('editSuggest').value;
+  lsSet('panda_links', links);
+  const cards = document.querySelectorAll('.contact-card');
+  cards[0].href = links.telegram; cards[1].href = links.rubika; cards[2].href = links.suggest;
+  flashAdmin('لینک‌ها ذخیره شدند ✔');
+}
+function addNews(){
+  const cat = document.getElementById('newNewsCat').value;
+  const tag = document.getElementById('newNewsTag').value.trim() || 'عمومی';
+  const title = document.getElementById('newNewsTitle').value.trim();
+  const desc = document.getElementById('newNewsDesc').value.trim();
+  if(!title || !desc){ flashAdmin('عنوان و توضیح الزامی است'); return; }
+  const item = {t:title, d:desc, tag};
+  if(cat==='game'){ gameNews.unshift(item); lsSet('panda_game_news', gameNews); populateFilter('gameFilter', gameNews); refreshGame(); }
+  else{ animeNews.unshift(item); lsSet('panda_anime_news', animeNews); populateFilter('animeFilter', animeNews); refreshAnime(); }
+  renderAdminNewsList();
+  document.getElementById('newNewsTitle').value=''; document.getElementById('newNewsDesc').value=''; document.getElementById('newNewsTag').value='';
+  flashAdmin('خبر اضافه شد ✔');
+}
+function renderAdminNewsList(){
+  const wrap = document.getElementById('adminNewsList');
+  wrap.innerHTML = '';
+  gameNews.forEach((n,i)=>{ const div=document.createElement('div'); div.className='admin-list-item'; div.innerHTML=`<span>🎮 ${n.t}</span><button onclick="removeNews('game',${i})">✕</button>`; wrap.appendChild(div); });
+  animeNews.forEach((n,i)=>{ const div=document.createElement('div'); div.className='admin-list-item'; div.innerHTML=`<span>🎌 ${n.t}</span><button onclick="removeNews('anime',${i})">✕</button>`; wrap.appendChild(div); });
+}
+function removeNews(cat, i){
+  if(cat==='game'){ gameNews.splice(i,1); lsSet('panda_game_news', gameNews); refreshGame(); }
+  else{ animeNews.splice(i,1); lsSet('panda_anime_news', animeNews); refreshAnime(); }
+  renderAdminNewsList(); flashAdmin('حذف شد');
+}
+function addNotif(){
+  const val = document.getElementById('newNotifText').value.trim();
+  if(!val) return;
+  notifs.push(val); lsSet('panda_notifs', notifs);
+  document.getElementById('newNotifText').value=''; renderAdminNotifList(); flashAdmin('اعلان اضافه شد ✔');
+}
+function renderAdminNotifList(){
+  const wrap = document.getElementById('adminNotifList'); wrap.innerHTML = '';
+  notifs.forEach((n,i)=>{ const div=document.createElement('div'); div.className='admin-list-item'; div.innerHTML=`<span>${n}</span><button onclick="removeNotif(${i})">✕</button>`; wrap.appendChild(div); });
+}
+function removeNotif(i){ notifs.splice(i,1); lsSet('panda_notifs', notifs); renderAdminNotifList(); }
+
+function addTicker(){
+  const val = document.getElementById('newTickerText').value.trim();
+  if(!val) return;
+  tickerData.push(val); lsSet('panda_ticker', tickerData);
+  document.getElementById('newTickerText').value=''; renderAdminTickerList(); renderTicker(); flashAdmin('پیام نوار اضافه شد ✔');
+}
+function renderAdminTickerList(){
+  const wrap = document.getElementById('adminTickerList'); wrap.innerHTML = '';
+  tickerData.forEach((n,i)=>{ const div=document.createElement('div'); div.className='admin-list-item'; div.innerHTML=`<span>${n}</span><button onclick="removeTicker(${i})">✕</button>`; wrap.appendChild(div); });
+}
+function removeTicker(i){ tickerData.splice(i,1); lsSet('panda_ticker', tickerData); renderAdminTickerList(); renderTicker(); }
+
+function addExtLink(){
+  const icon = document.getElementById('newExtIcon').value.trim() || '🔗';
+  const name = document.getElementById('newExtName').value.trim();
+  const desc = document.getElementById('newExtDesc').value.trim();
+  const url = document.getElementById('newExtUrl').value.trim();
+  if(!name || !url){ flashAdmin('نام و لینک الزامی است'); return; }
+  extData.push({icon, n:name, d:desc, url});
+  lsSet('panda_ext', extData); renderExt(); renderAdminExtList();
+  document.getElementById('newExtIcon').value=''; document.getElementById('newExtName').value=''; document.getElementById('newExtDesc').value=''; document.getElementById('newExtUrl').value='';
+  flashAdmin('لینک اضافه شد ✔');
+}
+function renderAdminExtList(){
+  const wrap = document.getElementById('adminExtList'); wrap.innerHTML='';
+  extData.forEach((e,i)=>{ const div=document.createElement('div'); div.className='admin-list-item'; div.innerHTML=`<span>${e.icon} ${e.n}</span><button onclick="removeExt(${i})">✕</button>`; wrap.appendChild(div); });
+}
+function removeExt(i){ extData.splice(i,1); lsSet('panda_ext', extData); renderExt(); renderAdminExtList(); }
+
+function renderStatsEditRow(){
+  const row = document.getElementById('statsEditRow');
+  row.innerHTML = statsData.map((s,i)=>`<input type="number" value="${s.n}" data-idx="${i}" class="stat-edit-input" style="max-width:110px;" placeholder="${s.l}">`).join('');
+}
+function saveStats(){
+  document.querySelectorAll('.stat-edit-input').forEach(inp=>{ statsData[inp.dataset.idx].n = parseInt(inp.value,10) || 0; });
+  lsSet('panda_stats', statsData); renderStats(); flashAdmin('آمار ذخیره شد ✔');
+}
+function addFaq(){
+  const q = document.getElementById('newFaqQ').value.trim();
+  const a = document.getElementById('newFaqA').value.trim();
+  if(!q || !a){ flashAdmin('سوال و پاسخ الزامی است'); return; }
+  faqData.push({q,a}); lsSet('panda_faq', faqData); renderFaq(); renderAdminFaqList();
+  document.getElementById('newFaqQ').value=''; document.getElementById('newFaqA').value='';
+  flashAdmin('سوال اضافه شد ✔');
+}
+function renderAdminFaqList(){
+  const wrap = document.getElementById('adminFaqList'); wrap.innerHTML='';
+  faqData.forEach((f,i)=>{ const div=document.createElement('div'); div.className='admin-list-item'; div.innerHTML=`<span>${f.q}</span><button onclick="removeFaq(${i})">✕</button>`; wrap.appendChild(div); });
+}
+function removeFaq(i){ faqData.splice(i,1); lsSet('panda_faq', faqData); renderFaq(); renderAdminFaqList(); }
+function addTesti(){
+  const n = document.getElementById('newTestiName').value.trim();
+  const t = document.getElementById('newTestiText').value.trim();
+  if(!n || !t){ flashAdmin('نام و متن الزامی است'); return; }
+  testiData.push({n,t}); lsSet('panda_testi', testiData); renderTesti(); renderAdminTestiList();
+  document.getElementById('newTestiName').value=''; document.getElementById('newTestiText').value='';
+  flashAdmin('نظر اضافه شد ✔');
+}
+function renderAdminTestiList(){
+  const wrap = document.getElementById('adminTestiList'); wrap.innerHTML='';
+  testiData.forEach((t,i)=>{ const div=document.createElement('div'); div.className='admin-list-item'; div.innerHTML=`<span>${t.n}: ${t.t.slice(0,30)}...</span><button onclick="removeTesti(${i})">✕</button>`; wrap.appendChild(div); });
+}
+function removeTesti(i){ testiData.splice(i,1); lsSet('panda_testi', testiData); renderTesti(); renderAdminTestiList(); }
+
+function renderAdminUsers(){
+  document.getElementById('userCount').textContent = users.length;
+  document.getElementById('userTableBody').innerHTML = users.map(u=>`<tr><td>${u.name}</td><td>${u.username}</td><td>${u.phone||'—'}</td><td>${u.email||'—'}</td></tr>`).join('');
+}
+
+/* ============ BACKUP / RESTORE ============ */
+function exportBackup(){
+  const backup = { gameNews, animeNews, notifs, links, general, users, statsData, faqData, featuresData, testiData, roadmapData, extData, tickerData, maintenanceOn };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'panda-backup.json'; a.click();
+  URL.revokeObjectURL(url);
+  flashAdmin('فایل پشتیبان دانلود شد ✔');
+}
+function importBackup(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const data = JSON.parse(e.target.result);
+      gameNews = data.gameNews || gameNews; animeNews = data.animeNews || animeNews;
+      notifs = data.notifs || notifs; links = data.links || links; general = data.general || general;
+      users = data.users || users; statsData = data.statsData || statsData; faqData = data.faqData || faqData;
+      featuresData = data.featuresData || featuresData; testiData = data.testiData || testiData;
+      roadmapData = data.roadmapData || roadmapData; extData = data.extData || extData; tickerData = data.tickerData || tickerData;
+      maintenanceOn = !!data.maintenanceOn;
+      ['panda_game_news','panda_anime_news','panda_notifs','panda_links','panda_general','panda_users','panda_stats','panda_faq','panda_features','panda_testi','panda_roadmap','panda_ext','panda_ticker','panda_maintenance']
+        .forEach((k,idx)=> lsSet(k, [gameNews,animeNews,notifs,links,general,users,statsData,faqData,featuresData,testiData,roadmapData,extData,tickerData,maintenanceOn][idx]));
+      applyGeneral(); populateFilter('gameFilter', gameNews); populateFilter('animeFilter', animeNews);
+      refreshGame(); refreshAnime(); renderStats(); renderFeatures(); renderFaq(); renderTesti(); renderRoadmap(); renderExt(); renderTicker();
+      document.getElementById('maintBanner').classList.toggle('show', maintenanceOn);
+      flashAdmin('بازیابی با موفقیت انجام شد ✔');
+    }catch(err){ flashAdmin('فایل نامعتبر است'); }
+  };
+  reader.readAsText(file);
+}
+function resetPandaSite(){
+  if(!confirm('همه چیز به حالت پیش‌فرض برمی‌گردد؟')) return;
+  ['panda_game_news','panda_anime_news','panda_notifs','panda_links','panda_general','panda_stats','panda_faq','panda_features','panda_testi','panda_roadmap','panda_ext','panda_ticker','panda_maintenance'].forEach(k=> localStorage.removeItem(k));
+  location.reload();
+}
+
+/* ============ BUTTON RIPPLE EFFECT ============ */
+document.addEventListener('click', (e)=>{
+  const btn = e.target.closest('.btn');
+  if(!btn) return;
+  const rect = btn.getBoundingClientRect();
+  const ripple = document.createElement('span');
+  ripple.className = 'ripple';
+  ripple.style.left = (e.clientX - rect.left) + 'px';
+  ripple.style.top = (e.clientY - rect.top) + 'px';
+  ripple.style.width = ripple.style.height = Math.max(rect.width, rect.height) + 'px';
+  btn.appendChild(ripple);
+  setTimeout(()=> ripple.remove(), 650);
+});
+
+/* ============ PANDA AI ASSISTANT (keyword-based Persian knowledge engine) ============ */
+const PANDA_KB = [
+  { kws:['سلام','درود','خوبی','هستی'], a:'سلام! خوبم، ممنون 🐼 من دستیار سایت PANDA هستم و درباره امکانات این پلتفرم می‌تونم کمکت کنم.' },
+  { kws:['این سایت چیه','panda چیه','هدف سایت','درباره سایت','چیکار میکنه'], a:'PANDA یک پلتفرم اختصاصی برای اخبار گیم، انیمه و مانگاست. بخش‌های اصلی: اخبار گیم، اخبار انیمه/مانگا، نقشه راه توسعه، سوالات متداول، لینک‌های مفید و همین بخش دستیار هوشمند.' },
+  { kws:['ثبت نام','ثبت‌نام','حساب کاربری','عضو شدن','اکانت بسازم'], a:'برای ثبت‌نام کافیه به بخش «ثبت‌نام / ورود» بری، نام و نام کاربری رو وارد کنی و دکمه «ساخت حساب» رو بزنی. توجه کن این حساب فقط روی همین مرورگر ذخیره می‌شه، نه روی یک سرور واقعی.' },
+  { kws:['ورود','لاگین','وارد شدن'], a:'برای ورود، در همون بخش ثبت‌نام روی تب «ورود» بزن و نام کاربری‌ای که قبلاً ثبت کردی رو وارد کن.' },
+  { kws:['پنل مدیریت','ادمین','admin','مدیریت سایت'], a:'پنل مدیریت در پایین صفحه با رمز عبور محافظت می‌شه و امکاناتی مثل ویرایش متن‌ها، رنگ برند، اخبار، لینک‌ها، اعلان‌ها، آمار، FAQ و پشتیبان‌گیری رو داره. من نمی‌تونم رمز عبور رو بهت بگم 🙂' },
+  { kws:['رمز','پسورد','پسوورد','password'], a:'من اجازه ندارم رمز پنل مدیریت رو فاش کنم. اگه مدیر سایت هستی، رمز رو از منبع امنی که داری استفاده کن.' },
+  { kws:['اخبار گیم','بازی جدید','گیم چی داره'], a:'بخش «اخبار گیم» شامل جدیدترین اتفاقات صنعت بازی‌سازیه، با قابلیت جست‌وجو، فیلتر دسته‌بندی و صفحه‌بندیه.' },
+  { kws:['اخبار انیمه','مانگا','انیمه چی داره'], a:'بخش «اخبار انیمه و مانگا» شامل مهم‌ترین اتفاقات این حوزه است، همراه با ۱۰ انیمه برتر پیشنهادی و امکان جست‌وجو و فیلتر.' },
+  { kws:['تماس','ارتباط','پشتیبانی','تلگرام','روبیکا'], a:'می‌تونی از بخش «ارتباط با ما» از طریق تلگرام (t.me/PV_n0irx)، روبیکا یا فرم پیشنهادات با تیم PANDA در ارتباط باشی.' },
+  { kws:['تم','حالت شب','دارک مود','روشن','تاریک'], a:'از منوی سه‌نقطه بالای صفحه گزینه «حالت شب/روز» رو بزن تا تم سایت بین حالت روشن و تاریک جابه‌جا بشه؛ انتخابت هم ذخیره می‌مونه.' },
+  { kws:['نقشه راه','roadmap','آینده سایت','برنامه بعدی'], a:'بخش «نقشه راه» نشون می‌ده PANDA چه مسیری رو طی کرده و قراره چه امکاناتی مثل مانگای اختصاصی و اپلیکیشن موبایل اضافه بشه.' },
+  { kws:['لینک مفید','منابع','سایت دیگه','steam','crunchyroll','myanimelist'], a:'بخش «لینک‌های مفید» به منابع رسمی و معتبر مثل Steam، IGN، Crunchyroll، MyAnimeList، AniList و Epic Games وصل می‌شه.' },
+  { kws:['امنیت','امن','اطلاعات من کجاست','حریم خصوصی'], a:'همه داده‌های این نسخه (حساب کاربری، اخبار اضافه‌شده و غیره) فقط داخل مرورگر خودت ذخیره می‌شن؛ هیچ سروری در کار نیست، پس برای اطلاعات حساس مناسب نیست.' },
+  { kws:['هوش مصنوعی','ai','تو چطور کار میکنی','واقعی هستی'], a:'من یک دستیار مبتنی بر تشخیص کلمه کلیدی هستم که کاملاً داخل همین صفحه اجرا می‌شم؛ یک مدل زبانی بزرگ متصل به اینترنت نیستم، ولی درباره PANDA اطلاعات کامل دارم!' },
+  { kws:['مرسی','ممنون','تشکر','خیلی خوب بود'], a:'خواهش می‌کنم! خوشحال می‌شم باز هم سوال بپرسی 🐼' },
+];
+function findPandaAnswer(q){
+  const lower = q.toLowerCase();
+  for(const entry of PANDA_KB){
+    if(entry.kws.some(k=> lower.includes(k))) return entry.a;
+  }
+  return 'متوجه دقیق سوالت نشدم 🐼 می‌تونی درباره ثبت‌نام، اخبار گیم/انیمه، پنل مدیریت، تم سایت یا راه‌های ارتباطی بپرسی. یا از دکمه‌های پیشنهادی بالا استفاده کن.';
+}
+
+function appendChatMsg(text, who, suffix){
+  suffix = suffix || '';
+  const log = document.getElementById('chatLog'+suffix);
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + who;
+  div.textContent = text;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+  return div;
+}
+
+/* ---- Real browser voice output (Web Speech API) ---- */
+let voiceOutOn = (function(){ try{ return localStorage.getItem('panda_voice_out') !== 'off'; }catch(e){ return true; } })();
+function speakAloud(text){
+  if(!voiceOutOn) return;
+  if(!('speechSynthesis' in window)) return;
+  try{
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    const voices = window.speechSynthesis.getVoices();
+    const faVoice = voices.find(v=> v.lang && v.lang.toLowerCase().startsWith('fa'));
+    if(faVoice) utter.voice = faVoice;
+    utter.lang = faVoice ? faVoice.lang : 'fa-IR';
+    utter.rate = 1;
+    window.speechSynthesis.speak(utter);
+  }catch(e){}
+}
+function toggleVoiceOut(){
+  voiceOutOn = !voiceOutOn;
+  try{ localStorage.setItem('panda_voice_out', voiceOutOn ? 'on' : 'off'); }catch(e){}
+  const btn = document.getElementById('voiceOutBtn');
+  if(btn) btn.textContent = voiceOutOn ? '🔊' : '🔇';
+  if(!voiceOutOn && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+}
+
+/* ---- Real browser voice input (Web Speech Recognition) ---- */
+let recognizer = null; let micActive = false;
+function setupRecognizer(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR) return null;
+  const r = new SR();
+  r.lang = 'fa-IR'; r.continuous = false; r.interimResults = false;
+  r.onresult = (e)=>{
+    const text = e.results[0][0].transcript;
+    document.getElementById('chatInputFS').value = text;
+    sendChat('FS');
+  };
+  r.onend = ()=>{ micActive = false; updateMicUI(); };
+  r.onerror = ()=>{ micActive = false; updateMicUI(); };
+  return r;
+}
+function updateMicUI(){
+  const btn = document.getElementById('micBtn');
+  const status = document.getElementById('micStatus');
+  if(!btn) return;
+  btn.classList.toggle('active', micActive);
+  status.textContent = micActive ? 'در حال گوش‌دادن... 🎙️' : 'میکروفون خاموش';
+}
+function toggleMic(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){ showToast('مرورگر شما از تشخیص صدا پشتیبانی نمی‌کند (Chrome یا Edge امتحان کن)'); return; }
+  if(!recognizer) recognizer = setupRecognizer();
+  if(micActive){ recognizer.stop(); micActive = false; }
+  else{ recognizer.start(); micActive = true; }
+  updateMicUI();
+}
+
+function pandaSpeak(text, suffix){
+  suffix = suffix || '';
+  const box = suffix ? document.getElementById('pandaBoxFS') : document.getElementById('pandaBox');
+  const bubble = document.getElementById('speechBubble'+suffix);
+  if(box) box.classList.add('talking');
+  if(bubble){
+    bubble.textContent = '';
+    let i = 0;
+    (function type(){
+      if(i <= text.length){ bubble.textContent = text.slice(0,i); i++; setTimeout(type, 22); }
+      else if(box){ box.classList.remove('talking'); }
+    })();
+  }
+  speakAloud(text);
+}
+function askPanda(question, suffix){
+  suffix = suffix || '';
+  appendChatMsg(question, 'user', suffix);
+  const log = document.getElementById('chatLog'+suffix);
+  const typingEl = document.createElement('div');
+  typingEl.className = 'typing-dots';
+  typingEl.innerHTML = '<span></span><span></span><span></span>';
+  log.appendChild(typingEl); log.scrollTop = log.scrollHeight;
+  setTimeout(()=>{
+    typingEl.remove();
+    const answer = findPandaAnswer(question);
+    appendChatMsg(answer, 'bot', suffix);
+    pandaSpeak(answer, suffix);
+    playTone(520);
+  }, 650);
+}
+function sendChat(suffix){
+  suffix = suffix || '';
+  const input = document.getElementById('chatInput'+suffix);
+  const val = input.value.trim();
+  if(!val) return;
+  askPanda(val, suffix);
+  input.value = '';
+}
+
+/* ---- Fullscreen assistant open/close ---- */
+document.getElementById('fullPandaSlotFS').innerHTML = pandaFullSVG('fs');
+document.getElementById('fabPandaSlot').innerHTML = pandaFullSVG('fab');
+function openPandaFullscreen(){
+  document.getElementById('pandaFullscreen').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  if(document.getElementById('chatLogFS').children.length === 0){
+    pandaSpeak('سلام! من پاندام 🐼 می‌تونی باهام تایپی یا با میکروفون صحبت کنی.', 'FS');
+  }
+}
+function closePandaFullscreen(){
+  document.getElementById('pandaFullscreen').classList.remove('open');
+  document.body.style.overflow = '';
+  if(recognizer && micActive){ recognizer.stop(); micActive=false; updateMicUI(); }
+  if('speechSynthesis' in window) window.speechSynthesis.cancel();
+}
+document.getElementById('voiceOutBtn') && (document.getElementById('voiceOutBtn').textContent = voiceOutOn ? '🔊' : '🔇');
+
+setTimeout(()=> pandaSpeak('سلام! من پاندام 🐼 هر سوالی درباره این سایت داری بپرس.'), 1500);
+</script>
+
+</body>
+</html>
